@@ -1,0 +1,1282 @@
+[
+  {
+    "id": "blue_tent_70",
+    "name": "Blue Tent",
+    "category": "Classic Housing",
+    "author": "Legacy Housing",
+    "description": "Original server housing multi 0x70 (Blue Tent) shared to community library.",
+    "cost": 20736,
+    "storage": 351,
+    "lockdowns": 81,
+    "vendors": 1,
+    "w": 8,
+    "d": 8,
+    "tiles": 77,
+    "file": "0070_Blue_Tent.png",
+    "floors": [
+      {
+        "z": 0,
+        "file": "0070_f1.png"
+      }
+    ],
+    "components": [
+      {
+        "itemId": 1,
+        "x": 0,
+        "y": 0,
+        "z": 0,
+        "flags": 1,
+        "expectedName": "Tile 0x0001"
+      },
+      {
+        "itemId": 3651,
+        "x": 0,
+        "y": -2,
+        "z": 0,
+        "flags": 1,
+        "expectedName": "Roof Section"
+      },
+      {
+        "itemId": 1542,
+        "x": 0,
+        "y": 0,
+        "z": 26,
+        "flags": 1,
+        "expectedName": "bsidian"
+      },
+      {
+        "itemId": 1542,
+        "x": -1,
+        "y": -1,
+        "z": 23,
+        "flags": 1,
+        "expectedName": "bsidian"
+      },
+      {
+        "itemId": 1536,
+        "x": 1,
+        "y": -1,
+        "z": 23,
+        "flags": 1,
+        "expectedName": "Door Component"
+      },
+      {
+        "itemId": 1536,
+        "x": 0,
+        "y": -1,
+        "z": 23,
+        "flags": 1,
+        "expectedName": "Door Component"
+      },
+      {
+        "itemId": 1535,
+        "x": -1,
+        "y": 0,
+        "z": 23,
+        "flags": 1,
+        "expectedName": "Tile 0x05FF"
+      },
+      {
+        "itemId": 1535,
+        "x": -1,
+        "y": 1,
+        "z": 23,
+        "flags": 1,
+        "expectedName": "Tile 0x05FF"
+      },
+      {
+        "itemId": 1536,
+        "x": 1,
+        "y": 0,
+        "z": 26,
+        "flags": 1,
+        "expectedName": "Door Component"
+      },
+      {
+        "itemId": 1535,
+        "x": 0,
+        "y": 1,
+        "z": 26,
+        "flags": 1,
+        "expectedName": "Tile 0x05FF"
+      },
+      {
+        "itemId": 1544,
+        "x": 1,
+        "y": 1,
+        "z": 34,
+        "flags": 1,
+        "expectedName": "Wall Structure"
+      },
+      {
+        "itemId": 1536,
+        "x": 1,
+        "y": -2,
+        "z": 20,
+        "flags": 1,
+        "expectedName": "Door Component"
+      },
+      {
+        "itemId": 1536,
+        "x": 0,
+        "y": -2,
+        "z": 20,
+        "flags": 1,
+        "expectedName": "Door Component"
+      },
+      {
+        "itemId": 1536,
+        "x": -1,
+        "y": -2,
+        "z": 20,
+        "flags": 1,
+        "expectedName": "Door Component"
+      },
+      {
+        "itemId": 1535,
+        "x": -2,
+        "y": -1,
+        "z": 20,
+        "flags": 1,
+        "expectedName": "Tile 0x05FF"
+      },
+      {
+        "itemId": 1535,
+        "x": -2,
+        "y": 0,
+        "z": 20,
+        "flags": 1,
+        "expectedName": "Tile 0x05FF"
+      },
+      {
+        "itemId": 1535,
+        "x": -2,
+        "y": 1,
+        "z": 20,
+        "flags": 1,
+        "expectedName": "Tile 0x05FF"
+      },
+      {
+        "itemId": 1535,
+        "x": -1,
+        "y": 2,
+        "z": 23,
+        "flags": 1,
+        "expectedName": "Tile 0x05FF"
+      },
+      {
+        "itemId": 1536,
+        "x": 2,
+        "y": -1,
+        "z": 23,
+        "flags": 1,
+        "expectedName": "Door Component"
+      },
+      {
+        "itemId": 1537,
+        "x": 1,
+        "y": 2,
+        "z": 26,
+        "flags": 1,
+        "expectedName": "an"
+      },
+      {
+        "itemId": 1541,
+        "x": 2,
+        "y": 0,
+        "z": 26,
+        "flags": 1,
+        "expectedName": "@"
+      },
+      {
+        "itemId": 1538,
+        "x": 2,
+        "y": 1,
+        "z": 26,
+        "flags": 1,
+        "expectedName": "Roof Section"
+      },
+      {
+        "itemId": 1543,
+        "x": 0,
+        "y": 2,
+        "z": 26,
+        "flags": 1,
+        "expectedName": "Tile 0x0607"
+      },
+      {
+        "itemId": 504,
+        "x": -3,
+        "y": 1,
+        "z": 0,
+        "flags": 1,
+        "expectedName": "Tile 0x01F8"
+      },
+      {
+        "itemId": 504,
+        "x": -3,
+        "y": 0,
+        "z": 0,
+        "flags": 1,
+        "expectedName": "Tile 0x01F8"
+      },
+      {
+        "itemId": 504,
+        "x": -3,
+        "y": -1,
+        "z": 0,
+        "flags": 1,
+        "expectedName": "Tile 0x01F8"
+      },
+      {
+        "itemId": 505,
+        "x": -1,
+        "y": -3,
+        "z": 0,
+        "flags": 1,
+        "expectedName": "Tile 0x01F9"
+      },
+      {
+        "itemId": 505,
+        "x": 0,
+        "y": -3,
+        "z": 0,
+        "flags": 1,
+        "expectedName": "Tile 0x01F9"
+      },
+      {
+        "itemId": 505,
+        "x": 1,
+        "y": -3,
+        "z": 0,
+        "flags": 1,
+        "expectedName": "Tile 0x01F9"
+      },
+      {
+        "itemId": 1542,
+        "x": -2,
+        "y": -2,
+        "z": 20,
+        "flags": 1,
+        "expectedName": "bsidian"
+      },
+      {
+        "itemId": 1536,
+        "x": 2,
+        "y": -2,
+        "z": 20,
+        "flags": 1,
+        "expectedName": "Door Component"
+      },
+      {
+        "itemId": 1535,
+        "x": -2,
+        "y": 2,
+        "z": 20,
+        "flags": 1,
+        "expectedName": "Tile 0x05FF"
+      },
+      {
+        "itemId": 1538,
+        "x": 3,
+        "y": 1,
+        "z": 23,
+        "flags": 1,
+        "expectedName": "Roof Section"
+      },
+      {
+        "itemId": 1538,
+        "x": 3,
+        "y": 0,
+        "z": 23,
+        "flags": 1,
+        "expectedName": "Roof Section"
+      },
+      {
+        "itemId": 1537,
+        "x": 0,
+        "y": 3,
+        "z": 23,
+        "flags": 1,
+        "expectedName": "an"
+      },
+      {
+        "itemId": 1537,
+        "x": 1,
+        "y": 3,
+        "z": 23,
+        "flags": 1,
+        "expectedName": "an"
+      },
+      {
+        "itemId": 1543,
+        "x": -1,
+        "y": 3,
+        "z": 23,
+        "flags": 1,
+        "expectedName": "Tile 0x0607"
+      },
+      {
+        "itemId": 1541,
+        "x": 3,
+        "y": -1,
+        "z": 23,
+        "flags": 1,
+        "expectedName": "@"
+      },
+      {
+        "itemId": 1540,
+        "x": 2,
+        "y": 2,
+        "z": 26,
+        "flags": 1,
+        "expectedName": "Tile 0x0604"
+      },
+      {
+        "itemId": 503,
+        "x": -3,
+        "y": 3,
+        "z": 0,
+        "flags": 1,
+        "expectedName": "Tile 0x01F7"
+      },
+      {
+        "itemId": 504,
+        "x": -3,
+        "y": 2,
+        "z": 0,
+        "flags": 1,
+        "expectedName": "Tile 0x01F8"
+      },
+      {
+        "itemId": 504,
+        "x": -3,
+        "y": -2,
+        "z": 0,
+        "flags": 1,
+        "expectedName": "Tile 0x01F8"
+      },
+      {
+        "itemId": 499,
+        "x": -3,
+        "y": -3,
+        "z": 0,
+        "flags": 1,
+        "expectedName": "Tile 0x01F3"
+      },
+      {
+        "itemId": 505,
+        "x": -2,
+        "y": -3,
+        "z": 0,
+        "flags": 1,
+        "expectedName": "Tile 0x01F9"
+      },
+      {
+        "itemId": 505,
+        "x": 2,
+        "y": -3,
+        "z": 0,
+        "flags": 1,
+        "expectedName": "Tile 0x01F9"
+      },
+      {
+        "itemId": 502,
+        "x": 3,
+        "y": -3,
+        "z": 0,
+        "flags": 1,
+        "expectedName": "Tile 0x01F6"
+      },
+      {
+        "itemId": 498,
+        "x": 4,
+        "y": -2,
+        "z": 0,
+        "flags": 1,
+        "expectedName": "Tile 0x01F2"
+      },
+      {
+        "itemId": 498,
+        "x": 4,
+        "y": -1,
+        "z": 0,
+        "flags": 1,
+        "expectedName": "Tile 0x01F2"
+      },
+      {
+        "itemId": 498,
+        "x": 4,
+        "y": 0,
+        "z": 0,
+        "flags": 1,
+        "expectedName": "Tile 0x01F2"
+      },
+      {
+        "itemId": 498,
+        "x": 4,
+        "y": 1,
+        "z": 0,
+        "flags": 1,
+        "expectedName": "Tile 0x01F2"
+      },
+      {
+        "itemId": 498,
+        "x": 4,
+        "y": 2,
+        "z": 0,
+        "flags": 1,
+        "expectedName": "Tile 0x01F2"
+      },
+      {
+        "itemId": 497,
+        "x": -2,
+        "y": 4,
+        "z": 0,
+        "flags": 1,
+        "expectedName": "Tile 0x01F1"
+      },
+      {
+        "itemId": 497,
+        "x": -1,
+        "y": 4,
+        "z": 0,
+        "flags": 1,
+        "expectedName": "Tile 0x01F1"
+      },
+      {
+        "itemId": 497,
+        "x": 2,
+        "y": 4,
+        "z": 0,
+        "flags": 1,
+        "expectedName": "Tile 0x01F1"
+      },
+      {
+        "itemId": 1538,
+        "x": 4,
+        "y": 1,
+        "z": 20,
+        "flags": 1,
+        "expectedName": "Roof Section"
+      },
+      {
+        "itemId": 1538,
+        "x": 4,
+        "y": 2,
+        "z": 20,
+        "flags": 1,
+        "expectedName": "Roof Section"
+      },
+      {
+        "itemId": 1535,
+        "x": -2,
+        "y": 3,
+        "z": 20,
+        "flags": 1,
+        "expectedName": "Tile 0x05FF"
+      },
+      {
+        "itemId": 1536,
+        "x": 3,
+        "y": -2,
+        "z": 20,
+        "flags": 1,
+        "expectedName": "Door Component"
+      },
+      {
+        "itemId": 1537,
+        "x": -1,
+        "y": 4,
+        "z": 20,
+        "flags": 1,
+        "expectedName": "an"
+      },
+      {
+        "itemId": 1537,
+        "x": 0,
+        "y": 4,
+        "z": 20,
+        "flags": 1,
+        "expectedName": "an"
+      },
+      {
+        "itemId": 1537,
+        "x": 1,
+        "y": 4,
+        "z": 20,
+        "flags": 1,
+        "expectedName": "an"
+      },
+      {
+        "itemId": 1538,
+        "x": 4,
+        "y": -1,
+        "z": 20,
+        "flags": 1,
+        "expectedName": "Roof Section"
+      },
+      {
+        "itemId": 1537,
+        "x": 2,
+        "y": 4,
+        "z": 20,
+        "flags": 1,
+        "expectedName": "an"
+      },
+      {
+        "itemId": 1538,
+        "x": 4,
+        "y": 0,
+        "z": 20,
+        "flags": 1,
+        "expectedName": "Roof Section"
+      },
+      {
+        "itemId": 1541,
+        "x": 4,
+        "y": -2,
+        "z": 20,
+        "flags": 1,
+        "expectedName": "@"
+      },
+      {
+        "itemId": 1543,
+        "x": -2,
+        "y": 4,
+        "z": 20,
+        "flags": 1,
+        "expectedName": "Tile 0x0607"
+      },
+      {
+        "itemId": 1540,
+        "x": 3,
+        "y": 3,
+        "z": 23,
+        "flags": 1,
+        "expectedName": "Tile 0x0604"
+      },
+      {
+        "itemId": 1537,
+        "x": 2,
+        "y": 3,
+        "z": 23,
+        "flags": 1,
+        "expectedName": "an"
+      },
+      {
+        "itemId": 1538,
+        "x": 3,
+        "y": 2,
+        "z": 23,
+        "flags": 1,
+        "expectedName": "Roof Section"
+      },
+      {
+        "itemId": 501,
+        "x": 4,
+        "y": -3,
+        "z": 0,
+        "flags": 1,
+        "expectedName": "Tile 0x01F5"
+      },
+      {
+        "itemId": 498,
+        "x": 4,
+        "y": 3,
+        "z": 0,
+        "flags": 1,
+        "expectedName": "Tile 0x01F2"
+      },
+      {
+        "itemId": 500,
+        "x": -3,
+        "y": 4,
+        "z": 0,
+        "flags": 1,
+        "expectedName": "Tile 0x01F4"
+      },
+      {
+        "itemId": 497,
+        "x": 3,
+        "y": 4,
+        "z": 0,
+        "flags": 1,
+        "expectedName": "Tile 0x01F1"
+      },
+      {
+        "itemId": 1537,
+        "x": 3,
+        "y": 4,
+        "z": 20,
+        "flags": 1,
+        "expectedName": "an"
+      },
+      {
+        "itemId": 1538,
+        "x": 4,
+        "y": 3,
+        "z": 20,
+        "flags": 1,
+        "expectedName": "Roof Section"
+      },
+      {
+        "itemId": 496,
+        "x": 4,
+        "y": 4,
+        "z": 0,
+        "flags": 1,
+        "expectedName": "Tile 0x01F0"
+      },
+      {
+        "itemId": 1540,
+        "x": 4,
+        "y": 4,
+        "z": 20,
+        "flags": 1,
+        "expectedName": "Tile 0x0604"
+      }
+    ],
+    "multi": 112
+  },
+  {
+    "id": "green_tent_72",
+    "name": "Green Tent",
+    "category": "Classic Housing",
+    "author": "Legacy Housing",
+    "description": "Original server housing multi 0x72 (Green Tent) shared to community library.",
+    "cost": 20736,
+    "storage": 351,
+    "lockdowns": 81,
+    "vendors": 1,
+    "w": 8,
+    "d": 8,
+    "tiles": 76,
+    "file": "0072_Green_Tent.png",
+    "floors": [
+      {
+        "z": 0,
+        "file": "0072_f1.png"
+      }
+    ],
+    "components": [
+      {
+        "itemId": 1,
+        "x": 0,
+        "y": 0,
+        "z": 0,
+        "flags": 1,
+        "expectedName": "nodraw"
+      },
+      {
+        "itemId": 3651,
+        "x": 0,
+        "y": -2,
+        "z": 0,
+        "flags": 1,
+        "expectedName": "wooden chest"
+      },
+      {
+        "itemId": 1566,
+        "x": 0,
+        "y": 0,
+        "z": 26,
+        "flags": 1,
+        "expectedName": "tent roof"
+      },
+      {
+        "itemId": 1560,
+        "x": 0,
+        "y": -1,
+        "z": 23,
+        "flags": 1,
+        "expectedName": "tent roof"
+      },
+      {
+        "itemId": 1560,
+        "x": 1,
+        "y": -1,
+        "z": 23,
+        "flags": 1,
+        "expectedName": "tent roof"
+      },
+      {
+        "itemId": 1559,
+        "x": -1,
+        "y": 0,
+        "z": 23,
+        "flags": 1,
+        "expectedName": "tent roof"
+      },
+      {
+        "itemId": 1559,
+        "x": -1,
+        "y": 1,
+        "z": 23,
+        "flags": 1,
+        "expectedName": "tent roof"
+      },
+      {
+        "itemId": 1566,
+        "x": -1,
+        "y": -1,
+        "z": 23,
+        "flags": 1,
+        "expectedName": "tent roof"
+      },
+      {
+        "itemId": 1559,
+        "x": 0,
+        "y": 1,
+        "z": 26,
+        "flags": 1,
+        "expectedName": "tent roof"
+      },
+      {
+        "itemId": 1560,
+        "x": 1,
+        "y": 0,
+        "z": 26,
+        "flags": 1,
+        "expectedName": "tent roof"
+      },
+      {
+        "itemId": 1568,
+        "x": 1,
+        "y": 1,
+        "z": 34,
+        "flags": 1,
+        "expectedName": "tent roof"
+      },
+      {
+        "itemId": 1560,
+        "x": 1,
+        "y": -2,
+        "z": 20,
+        "flags": 1,
+        "expectedName": "tent roof"
+      },
+      {
+        "itemId": 1560,
+        "x": 0,
+        "y": -2,
+        "z": 20,
+        "flags": 1,
+        "expectedName": "tent roof"
+      },
+      {
+        "itemId": 1560,
+        "x": -1,
+        "y": -2,
+        "z": 20,
+        "flags": 1,
+        "expectedName": "tent roof"
+      },
+      {
+        "itemId": 1559,
+        "x": -2,
+        "y": -1,
+        "z": 20,
+        "flags": 1,
+        "expectedName": "tent roof"
+      },
+      {
+        "itemId": 1559,
+        "x": -2,
+        "y": 0,
+        "z": 20,
+        "flags": 1,
+        "expectedName": "tent roof"
+      },
+      {
+        "itemId": 1559,
+        "x": -2,
+        "y": 1,
+        "z": 20,
+        "flags": 1,
+        "expectedName": "tent roof"
+      },
+      {
+        "itemId": 1559,
+        "x": -1,
+        "y": 2,
+        "z": 23,
+        "flags": 1,
+        "expectedName": "tent roof"
+      },
+      {
+        "itemId": 1560,
+        "x": 2,
+        "y": -1,
+        "z": 23,
+        "flags": 1,
+        "expectedName": "tent roof"
+      },
+      {
+        "itemId": 1565,
+        "x": 2,
+        "y": 0,
+        "z": 26,
+        "flags": 1,
+        "expectedName": "tent roof"
+      },
+      {
+        "itemId": 1567,
+        "x": 0,
+        "y": 2,
+        "z": 26,
+        "flags": 1,
+        "expectedName": "tent roof"
+      },
+      {
+        "itemId": 1561,
+        "x": 1,
+        "y": 2,
+        "z": 26,
+        "flags": 1,
+        "expectedName": "tent roof"
+      },
+      {
+        "itemId": 1562,
+        "x": 2,
+        "y": 1,
+        "z": 26,
+        "flags": 1,
+        "expectedName": "tent roof"
+      },
+      {
+        "itemId": 568,
+        "x": -3,
+        "y": 1,
+        "z": 0,
+        "flags": 1,
+        "expectedName": "tent wall"
+      },
+      {
+        "itemId": 568,
+        "x": -3,
+        "y": 0,
+        "z": 0,
+        "flags": 1,
+        "expectedName": "tent wall"
+      },
+      {
+        "itemId": 569,
+        "x": 1,
+        "y": -3,
+        "z": 0,
+        "flags": 1,
+        "expectedName": "tent wall"
+      },
+      {
+        "itemId": 568,
+        "x": -3,
+        "y": -1,
+        "z": 0,
+        "flags": 1,
+        "expectedName": "tent wall"
+      },
+      {
+        "itemId": 569,
+        "x": 0,
+        "y": -3,
+        "z": 0,
+        "flags": 1,
+        "expectedName": "tent wall"
+      },
+      {
+        "itemId": 569,
+        "x": -1,
+        "y": -3,
+        "z": 0,
+        "flags": 1,
+        "expectedName": "tent wall"
+      },
+      {
+        "itemId": 1560,
+        "x": 2,
+        "y": -2,
+        "z": 20,
+        "flags": 1,
+        "expectedName": "tent roof"
+      },
+      {
+        "itemId": 1566,
+        "x": -2,
+        "y": -2,
+        "z": 20,
+        "flags": 1,
+        "expectedName": "tent roof"
+      },
+      {
+        "itemId": 1559,
+        "x": -2,
+        "y": 2,
+        "z": 20,
+        "flags": 1,
+        "expectedName": "tent roof"
+      },
+      {
+        "itemId": 1565,
+        "x": 3,
+        "y": -1,
+        "z": 23,
+        "flags": 1,
+        "expectedName": "tent roof"
+      },
+      {
+        "itemId": 1567,
+        "x": -1,
+        "y": 3,
+        "z": 23,
+        "flags": 1,
+        "expectedName": "tent roof"
+      },
+      {
+        "itemId": 1562,
+        "x": 3,
+        "y": 1,
+        "z": 23,
+        "flags": 1,
+        "expectedName": "tent roof"
+      },
+      {
+        "itemId": 1562,
+        "x": 3,
+        "y": 0,
+        "z": 23,
+        "flags": 1,
+        "expectedName": "tent roof"
+      },
+      {
+        "itemId": 1561,
+        "x": 1,
+        "y": 3,
+        "z": 23,
+        "flags": 1,
+        "expectedName": "tent roof"
+      },
+      {
+        "itemId": 1561,
+        "x": 0,
+        "y": 3,
+        "z": 23,
+        "flags": 1,
+        "expectedName": "tent roof"
+      },
+      {
+        "itemId": 1564,
+        "x": 2,
+        "y": 2,
+        "z": 26,
+        "flags": 1,
+        "expectedName": "tent roof"
+      },
+      {
+        "itemId": 563,
+        "x": -3,
+        "y": -3,
+        "z": 0,
+        "flags": 1,
+        "expectedName": "wooden pole"
+      },
+      {
+        "itemId": 567,
+        "x": -3,
+        "y": 3,
+        "z": 0,
+        "flags": 1,
+        "expectedName": "tent wall"
+      },
+      {
+        "itemId": 568,
+        "x": -3,
+        "y": -2,
+        "z": 0,
+        "flags": 1,
+        "expectedName": "tent wall"
+      },
+      {
+        "itemId": 568,
+        "x": -3,
+        "y": 2,
+        "z": 0,
+        "flags": 1,
+        "expectedName": "tent wall"
+      },
+      {
+        "itemId": 569,
+        "x": 2,
+        "y": -3,
+        "z": 0,
+        "flags": 1,
+        "expectedName": "tent wall"
+      },
+      {
+        "itemId": 569,
+        "x": -2,
+        "y": -3,
+        "z": 0,
+        "flags": 1,
+        "expectedName": "tent wall"
+      },
+      {
+        "itemId": 566,
+        "x": 3,
+        "y": -3,
+        "z": 0,
+        "flags": 1,
+        "expectedName": "tent wall"
+      },
+      {
+        "itemId": 562,
+        "x": 4,
+        "y": -2,
+        "z": 0,
+        "flags": 1,
+        "expectedName": "tent wall"
+      },
+      {
+        "itemId": 562,
+        "x": 4,
+        "y": -1,
+        "z": 0,
+        "flags": 1,
+        "expectedName": "tent wall"
+      },
+      {
+        "itemId": 562,
+        "x": 4,
+        "y": 0,
+        "z": 0,
+        "flags": 1,
+        "expectedName": "tent wall"
+      },
+      {
+        "itemId": 562,
+        "x": 4,
+        "y": 1,
+        "z": 0,
+        "flags": 1,
+        "expectedName": "tent wall"
+      },
+      {
+        "itemId": 562,
+        "x": 4,
+        "y": 2,
+        "z": 0,
+        "flags": 1,
+        "expectedName": "tent wall"
+      },
+      {
+        "itemId": 561,
+        "x": 2,
+        "y": 4,
+        "z": 0,
+        "flags": 1,
+        "expectedName": "tent wall"
+      },
+      {
+        "itemId": 561,
+        "x": -2,
+        "y": 4,
+        "z": 0,
+        "flags": 1,
+        "expectedName": "tent wall"
+      },
+      {
+        "itemId": 561,
+        "x": -1,
+        "y": 4,
+        "z": 0,
+        "flags": 1,
+        "expectedName": "tent wall"
+      },
+      {
+        "itemId": 1561,
+        "x": 2,
+        "y": 4,
+        "z": 20,
+        "flags": 1,
+        "expectedName": "tent roof"
+      },
+      {
+        "itemId": 1561,
+        "x": 1,
+        "y": 4,
+        "z": 20,
+        "flags": 1,
+        "expectedName": "tent roof"
+      },
+      {
+        "itemId": 1560,
+        "x": 3,
+        "y": -2,
+        "z": 20,
+        "flags": 1,
+        "expectedName": "tent roof"
+      },
+      {
+        "itemId": 1562,
+        "x": 4,
+        "y": 2,
+        "z": 20,
+        "flags": 1,
+        "expectedName": "tent roof"
+      },
+      {
+        "itemId": 1562,
+        "x": 4,
+        "y": 1,
+        "z": 20,
+        "flags": 1,
+        "expectedName": "tent roof"
+      },
+      {
+        "itemId": 1562,
+        "x": 4,
+        "y": 0,
+        "z": 20,
+        "flags": 1,
+        "expectedName": "tent roof"
+      },
+      {
+        "itemId": 1562,
+        "x": 4,
+        "y": -1,
+        "z": 20,
+        "flags": 1,
+        "expectedName": "tent roof"
+      },
+      {
+        "itemId": 1565,
+        "x": 4,
+        "y": -2,
+        "z": 20,
+        "flags": 1,
+        "expectedName": "tent roof"
+      },
+      {
+        "itemId": 1567,
+        "x": -2,
+        "y": 4,
+        "z": 20,
+        "flags": 1,
+        "expectedName": "tent roof"
+      },
+      {
+        "itemId": 1559,
+        "x": -2,
+        "y": 3,
+        "z": 20,
+        "flags": 1,
+        "expectedName": "tent roof"
+      },
+      {
+        "itemId": 1561,
+        "x": -1,
+        "y": 4,
+        "z": 20,
+        "flags": 1,
+        "expectedName": "tent roof"
+      },
+      {
+        "itemId": 1561,
+        "x": 0,
+        "y": 4,
+        "z": 20,
+        "flags": 1,
+        "expectedName": "tent roof"
+      },
+      {
+        "itemId": 1564,
+        "x": 3,
+        "y": 3,
+        "z": 23,
+        "flags": 1,
+        "expectedName": "tent roof"
+      },
+      {
+        "itemId": 1561,
+        "x": 2,
+        "y": 3,
+        "z": 23,
+        "flags": 1,
+        "expectedName": "tent roof"
+      },
+      {
+        "itemId": 1562,
+        "x": 3,
+        "y": 2,
+        "z": 23,
+        "flags": 1,
+        "expectedName": "tent roof"
+      },
+      {
+        "itemId": 561,
+        "x": 3,
+        "y": 4,
+        "z": 0,
+        "flags": 1,
+        "expectedName": "tent wall"
+      },
+      {
+        "itemId": 562,
+        "x": 4,
+        "y": 3,
+        "z": 0,
+        "flags": 1,
+        "expectedName": "tent wall"
+      },
+      {
+        "itemId": 564,
+        "x": -3,
+        "y": 4,
+        "z": 0,
+        "flags": 1,
+        "expectedName": "tent wall"
+      },
+      {
+        "itemId": 565,
+        "x": 4,
+        "y": -3,
+        "z": 0,
+        "flags": 1,
+        "expectedName": "tent wall"
+      },
+      {
+        "itemId": 1561,
+        "x": 3,
+        "y": 4,
+        "z": 20,
+        "flags": 1,
+        "expectedName": "tent roof"
+      },
+      {
+        "itemId": 1562,
+        "x": 4,
+        "y": 3,
+        "z": 20,
+        "flags": 1,
+        "expectedName": "tent roof"
+      },
+      {
+        "itemId": 560,
+        "x": 4,
+        "y": 4,
+        "z": 0,
+        "flags": 1,
+        "expectedName": "tent wall"
+      },
+      {
+        "itemId": 1564,
+        "x": 4,
+        "y": 4,
+        "z": 20,
+        "flags": 1,
+        "expectedName": "tent roof"
+      }
+    ],
+    "multi": 114
+  }
+]

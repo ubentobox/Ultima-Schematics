@@ -1,0 +1,507 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Ultima Online Housing & Art Studio</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Source+Sans+3:wght@400;600;700&display=swap">
+  <link rel="stylesheet" href="/app.css?v=6">
+</head>
+<body>
+
+  <header>
+    <div class="header-top">
+      <div>
+        <h1>Ultima Online Housing & Art Studio</h1>
+        <p class="sub">Local server housing manager, community design repository, multi-directory client comparison, and automated C# script synchronizer.</p>
+      </div>
+      <div>
+        <button id="theme-toggle" class="btn btn-sm" type="button">🌙 Dark</button>
+      </div>
+    </div>
+
+    <!-- Navigation Tabs -->
+    <nav class="nav-tabs" role="tablist">
+      <button class="tab-btn active" data-tab="server" type="button" role="tab">
+        🏛️ Server Housing Menu <span class="tab-badge" id="tab-server-count">68</span>
+      </button>
+      <button class="tab-btn" data-tab="library" type="button" role="tab">
+        🌐 House Design Library <span class="tab-badge" id="tab-library-count">8</span>
+      </button>
+      <button class="tab-btn" data-tab="compare" type="button" role="tab">
+        ⚖️ Art & Client Comparison
+      </button>
+      <button class="tab-btn" data-tab="settings" type="button" role="tab">
+        ⚙️ Directories & Settings
+      </button>
+    </nav>
+  </header>
+
+  <!-- Sticky Filter / Sort Toolbar for Server & Library views -->
+  <div class="bar" id="main-toolbar">
+    <div class="bar-in">
+      <div class="seg" role="group" aria-label="Default view for all houses">
+        <button data-view="full" aria-pressed="true" type="button">Full</button>
+        <button data-view="ground" aria-pressed="false" type="button">Ground floor</button>
+        <button data-view="top" aria-pressed="false" type="button">Top floor</button>
+      </div>
+
+      <label id="lib-cat-filter-wrap" hidden>Category
+        <select id="lib-category-filter">
+          <option value="all">All Categories</option>
+        </select>
+      </label>
+
+      <label>Sort
+        <select id="sort">
+          <option value="cost">Price</option>
+          <option value="storage">Storage</option>
+          <option value="lockdowns">Lockdowns</option>
+          <option value="vendors">Vendors</option>
+          <option value="floors">Floors</option>
+          <option value="name">Name</option>
+          <option value="category">Category</option>
+          <option value="author">Author</option>
+        </select>
+      </label>
+
+      <label>Find
+        <input type="search" id="q" placeholder="name, category, author, 0x48...">
+      </label>
+
+      <span class="count" id="count"></span>
+      <button class="btn btn-sm btn-primary" id="btn-export-cs" type="button" onclick="exportServerCsScript()">📜 Export C#</button>
+    </div>
+  </div>
+
+  <!-- TAB 1: SERVER HOUSES -->
+  <main id="view-server">
+    <div class="grid" id="server-grid"></div>
+  </main>
+
+  <!-- TAB 2: HOUSE DESIGN LIBRARY (ONLINE / COMMUNITY REPO) -->
+  <main id="view-library" hidden>
+    <div class="grid" id="library-grid"></div>
+  </main>
+
+  <!-- TAB 3: ART & CLIENT COMPARISON TOOL -->
+  <main id="view-compare" class="view-panel" hidden>
+    <div class="settings-card">
+      <h3>Compare Art & Tiledata Directories</h3>
+      <p style="color:var(--muted);margin-top:0">Compare two directories containing <code>artidx.mul</code>, <code>art.mul</code>, and <code>tiledata.mul</code> to detect missing tiles, mismatched sprites, and metadata differences.</p>
+      
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+        <div class="form-group">
+          <label>Directory A (Base / Server Client)</label>
+          <input type="text" id="comp-dir-a" style="width:100%" placeholder="e.g. C:\Ultima-Adventures\Client\Data Files">
+        </div>
+        <div class="form-group">
+          <label>Directory B (Comparison / Download / Patch)</label>
+          <input type="text" id="comp-dir-b" style="width:100%" placeholder="e.g. E:\Projects\ultima-schematics\Files">
+        </div>
+      </div>
+
+      <button class="btn btn-primary" id="btn-scan-comp" type="button" onclick="triggerScanComparison()">
+        ⚖️ Start Art & Tile Comparison
+      </button>
+    </div>
+
+    <!-- Comparison Results Wrap -->
+    <div id="comp-results-wrap" hidden>
+      <div class="comp-stats-grid">
+        <div class="stat-box">
+          <div class="stat-val" id="stat-total">0</div>
+          <div class="stat-lbl">Total Tiles Checked</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-val" style="color:var(--success)" id="stat-identical">0</div>
+          <div class="stat-lbl">Identical</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-val" style="color:var(--warning)" id="stat-graphic-diff">0</div>
+          <div class="stat-lbl">Graphic Mismatch</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-val" style="color:var(--accent)" id="stat-tiledata-diff">0</div>
+          <div class="stat-lbl">Tiledata Diff</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-val" style="color:var(--danger)" id="stat-missing-a">0</div>
+          <div class="stat-lbl">Missing in A</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-val" style="color:var(--danger)" id="stat-missing-b">0</div>
+          <div class="stat-lbl">Missing in B</div>
+        </div>
+      </div>
+
+      <!-- Filters & Search Toolbar -->
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:12px;">
+        <div class="seg" id="comp-filter-group" role="group">
+          <button data-filter="all" aria-pressed="true" type="button" onclick="setCompFilter('all')">All Diffs</button>
+          <button data-filter="graphic_mismatch" aria-pressed="false" type="button" onclick="setCompFilter('graphic_mismatch')">Graphic Mismatches</button>
+          <button data-filter="tiledata_mismatch" aria-pressed="false" type="button" onclick="setCompFilter('tiledata_mismatch')">Tiledata Diffs</button>
+          <button data-filter="missing_in_a" aria-pressed="false" type="button" onclick="setCompFilter('missing_in_a')">Missing in A</button>
+          <button data-filter="missing_in_b" aria-pressed="false" type="button" onclick="setCompFilter('missing_in_b')">Missing in B</button>
+        </div>
+
+        <input type="search" id="comp-search" placeholder="Search tile ID or name..." oninput="refreshCompareView()">
+      </div>
+
+      <!-- Comparison Table -->
+      <div class="table-wrap">
+        <table class="comp-table">
+          <thead>
+            <tr>
+              <th style="width:90px">Tile ID</th>
+              <th>Directory A (Base)</th>
+              <th>Directory B (Target)</th>
+              <th style="width:140px">Difference</th>
+              <th style="width:200px">Action</th>
+            </tr>
+          </thead>
+          <tbody id="comp-table-body"></tbody>
+        </table>
+      </div>
+
+      <!-- Pagination -->
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-top:12px;">
+        <span id="comp-pagination-info" style="font-size:13px;color:var(--muted)"></span>
+        <div style="display:flex;gap:6px">
+          <button class="btn btn-sm" id="comp-btn-prev" type="button" onclick="changeCompPage(-1)">Previous</button>
+          <button class="btn btn-sm" id="comp-btn-next" type="button" onclick="changeCompPage(1)">Next</button>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- TAB 4: DIRECTORIES & SETTINGS -->
+  <main id="view-settings" class="view-panel" hidden>
+    <div class="settings-card">
+      <h3>Active Directories Configuration</h3>
+      <p style="color:var(--muted);margin-top:0">Configure the local directories for server multi files, client artwork sprites, and C# server scripts.</p>
+
+      <div class="form-group">
+        <label>Server Multi & Files Directory</label>
+        <div class="input-row">
+          <input type="text" id="cfg-server-files" placeholder="e.g. E:\Projects\ultima-schematics\Files">
+        </div>
+        <div id="status-files" class="status-pill">Checking...</div>
+        <small style="display:block;color:var(--muted);margin-top:2px">Requires: <code>multi.idx</code>, <code>multi.mul</code>, <code>tiledata.mul</code>, <code>Cliloc.enu</code></small>
+      </div>
+
+      <div class="form-group">
+        <label>Client Art Directory</label>
+        <div class="input-row">
+          <input type="text" id="cfg-client-art" placeholder="e.g. C:\Ultima-Adventures\Client\Data Files">
+        </div>
+        <div id="status-art" class="status-pill">Checking...</div>
+        <small style="display:block;color:var(--muted);margin-top:2px">Requires: <code>artidx.mul</code>, <code>art.mul</code> (used for sprite rendering and compatibility checks)</small>
+      </div>
+
+      <div class="form-group">
+        <label>Server Housing Scripts Directory</label>
+        <div class="input-row">
+          <input type="text" id="cfg-server-scripts" placeholder="e.g. E:\Projects\ultima-adventures\Scripts\Engines and systems\Houses">
+        </div>
+        <div id="status-scripts" class="status-pill">Checking...</div>
+        <small style="display:block;color:var(--muted);margin-top:2px">Requires: <code>HousePlacementContainer.cs</code>, <code>Houses.cs</code></small>
+      </div>
+
+      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
+        <button class="btn btn-primary" type="button" onclick="saveSettings()">
+          💾 Save Settings & Reload Readers
+        </button>
+        <button class="btn" id="btn-regen-images" type="button" onclick="regenerateHouseImagesFromSettings()">
+          🖼️ Re-render All House & Floor Images (with Doors & Signs)
+        </button>
+      </div>
+    </div>
+  </main>
+
+  <!-- FOOTER -->
+  <footer>
+    Storage and lockdowns are the house's secure-container and item limits. Footprint is the multi's tile extent, including steps. Floors are detected from the walkable tiles in the multi, so a roof terrace or a steeple can count as a floor. Doors, house signs, and placement fixtures are rendered in their placed positions alongside the multi structure.
+  </footer>
+
+  <!-- ======================================================== -->
+  <!-- MODALS -->
+  <!-- ======================================================== -->
+
+  <!-- MODAL: EDIT SERVER HOUSE STATS -->
+  <div class="modal-backdrop" id="modal-edit-house" hidden>
+    <div class="modal-box">
+      <div class="modal-header">
+        <h2>✏️ Edit Server House Parameters</h2>
+        <button class="btn btn-sm" type="button" onclick="closeEditHouseModal()">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label>House Name</label>
+          <input type="text" id="edit-name" style="width:100%">
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+          <div class="form-group">
+            <label>Gold Cost</label>
+            <input type="number" id="edit-cost" oninput="updateCostHelper()">
+            <small id="cost-helper" style="display:block;color:var(--accent);font-weight:600;margin-top:2px"></small>
+          </div>
+          <div class="form-group">
+            <label>Multi ID</label>
+            <input type="text" id="edit-multi" readonly style="background:var(--thumb);cursor:not-allowed">
+          </div>
+          <div class="form-group">
+            <label>Storage (Secures)</label>
+            <input type="number" id="edit-storage">
+          </div>
+          <div class="form-group">
+            <label>Lockdowns</label>
+            <input type="number" id="edit-lockdowns">
+          </div>
+          <div class="form-group">
+            <label>Vendors</label>
+            <input type="number" id="edit-vendors">
+          </div>
+        </div>
+
+        <div style="margin-top:14px;padding:10px;background:var(--bg);border-radius:4px;border:1px solid var(--line);">
+          <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;">
+            <input type="checkbox" id="edit-sync-server" checked>
+            <span>Automatically synchronize changes to Server Script (<code>HousePlacementContainer.cs</code>) with automated timestamped backup</span>
+          </label>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn" type="button" onclick="closeEditHouseModal()">Cancel</button>
+        <button class="btn btn-primary" type="button" onclick="saveHouseChanges()">💾 Save Changes</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: ADD / EDIT LIBRARY ENTRY -->
+  <div class="modal-backdrop" id="modal-library-entry" hidden>
+    <div class="modal-box">
+      <div class="modal-header">
+        <h2 id="lib-modal-title">📤 Add House to Design Library</h2>
+        <button class="btn btn-sm" type="button" onclick="closeLibraryEntryModal()">✕</button>
+      </div>
+      <div class="modal-body">
+        <p id="lib-modal-subtitle" style="color:var(--muted);margin-top:0;font-size:13px"></p>
+
+        <div class="form-group">
+          <label>House Name</label>
+          <input type="text" id="lib-edit-name" style="width:100%" placeholder="e.g. Stone And Plaster House">
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+          <div class="form-group">
+            <label>Category</label>
+            <input type="text" id="lib-edit-category" list="library-categories-list" style="width:100%" placeholder="e.g. Classic Housing">
+            <datalist id="library-categories-list">
+              <option value="Classic Housing"></option>
+              <option value="Mansions"></option>
+              <option value="Villas"></option>
+              <option value="Castles"></option>
+              <option value="Towers"></option>
+              <option value="Shops & Guilds"></option>
+              <option value="Cottages & Cabins"></option>
+              <option value="Themed"></option>
+            </datalist>
+          </div>
+          <div class="form-group">
+            <label>Author / Credits</label>
+            <input type="text" id="lib-edit-author" style="width:100%" placeholder="e.g. Server Administrator">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Description</label>
+          <textarea id="lib-edit-description" rows="3" style="width:100%;font:inherit;color:var(--fg);background:var(--panel);border:1px solid var(--line);border-radius:4px;padding:8px;resize:vertical;" placeholder="Describe the architectural style, layout, or special features..."></textarea>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+          <div class="form-group" style="margin-bottom:0">
+            <label>Suggested Gold Cost</label>
+            <input type="number" id="lib-edit-cost" style="width:100%" oninput="updateLibCostHelper()">
+            <small id="lib-cost-helper" style="display:block;color:var(--accent);font-weight:600;margin-top:2px"></small>
+          </div>
+          <div class="form-group" style="margin-bottom:0">
+            <label>Vendors</label>
+            <input type="number" id="lib-edit-vendors" style="width:100%">
+          </div>
+          <div class="form-group" style="margin-bottom:0">
+            <label>Storage (Secures)</label>
+            <input type="number" id="lib-edit-storage" style="width:100%">
+          </div>
+          <div class="form-group" style="margin-bottom:0">
+            <label>Lockdowns</label>
+            <input type="number" id="lib-edit-lockdowns" style="width:100%">
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn" type="button" onclick="closeLibraryEntryModal()">Cancel</button>
+        <button class="btn btn-primary" id="lib-modal-submit-btn" type="button" onclick="submitLibraryEntryModal()">📤 Save to Library</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: TILE COMPATIBILITY RESOLVER -->
+  <div class="modal-backdrop" id="modal-resolver" hidden>
+    <div class="modal-box modal-lg">
+      <div class="modal-header">
+        <h2>🔧 Resolve House Tile Incompatibility</h2>
+        <button class="btn btn-sm" type="button" onclick="closeTileResolverModal()">✕</button>
+      </div>
+      <div class="modal-body">
+        <div style="margin-bottom:14px">
+          <div style="font-family:var(--display);font-size:16px;font-weight:700" id="resolver-house-name"></div>
+          <p id="resolver-house-desc" style="color:var(--muted);font-size:13px;margin:4px 0 0"></p>
+        </div>
+
+        <div id="resolver-list"></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn" type="button" onclick="closeTileResolverModal()">Cancel</button>
+        <button class="btn btn-primary" type="button" onclick="commitTileResolution()">
+          ✓ Apply Substitutions & Commit House to Server
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: VISUAL TILE PICKER -->
+  <div class="modal-backdrop" id="modal-tile-picker" hidden>
+    <div class="modal-box">
+      <div class="modal-header">
+        <h2>🎨 Pick Replacement Tile</h2>
+        <button class="btn btn-sm" type="button" onclick="closeTilePicker()">✕</button>
+      </div>
+      <div class="modal-body">
+        <div style="display:flex;gap:8px;margin-bottom:12px;">
+          <input type="search" id="picker-search" style="flex:1" placeholder="Search wall, floor, stairs, arch, 0x001B..." oninput="searchTilePicker(this.value)">
+        </div>
+        <div class="tile-picker-grid" id="picker-grid"></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn" type="button" onclick="closeTilePicker()">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: MULTI TILE INSPECTOR -->
+  <div class="modal-backdrop" id="modal-tile-inspector" hidden>
+    <div class="modal-box modal-lg">
+      <div class="modal-header">
+        <h2 id="inspector-title">Multi Component Tiles</h2>
+        <button class="btn btn-sm" type="button" onclick="closeTileInspectorModal()">✕</button>
+      </div>
+      <div class="modal-body">
+        <p style="color:var(--muted);margin-top:0;font-size:13px">All unique tiles used in the construction of this house multi (including doors and house sign). Click any tile to inspect its sprite and <code>tiledata.mul</code> attributes.</p>
+        <div class="tile-picker-grid" id="inspector-tiles-grid" style="max-height:450px"></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn" type="button" onclick="closeTileInspectorModal()">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: SINGLE TILE DETAILS -->
+  <div class="modal-backdrop" id="modal-tile-detail" hidden>
+    <div class="modal-box" style="max-width:460px">
+      <div class="modal-header">
+        <h2 id="tile-detail-title">Tile Details</h2>
+        <button class="btn btn-sm" type="button" onclick="closeTileDetailModal()">✕</button>
+      </div>
+      <div class="modal-body" id="tile-detail-body"></div>
+      <div class="modal-footer">
+        <button class="btn btn-primary" type="button" onclick="closeTileDetailModal()">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: SIDE-BY-SIDE ZOOM COMPARISON -->
+  <div class="modal-backdrop" id="modal-zoom" hidden>
+    <div class="modal-box">
+      <div class="modal-header">
+        <h2 id="zoom-title">Side-by-Side Sprite Inspection</h2>
+        <button class="btn btn-sm" type="button" onclick="closeSideBySideZoom()">✕</button>
+      </div>
+      <div class="modal-body" style="display:grid;grid-template-columns:1fr 1fr;gap:16px;text-align:center;">
+        <div style="background:var(--bg);padding:16px;border-radius:6px;border:1px solid var(--line);">
+          <div style="font-weight:700;margin-bottom:8px">Directory A (Base)</div>
+          <div style="height:120px;display:flex;align-items:center;justify-content:center;">
+            <img id="zoom-img-a" style="max-height:100%;image-rendering:pixelated;transform:scale(2)" alt="Sprite A">
+          </div>
+        </div>
+        <div style="background:var(--bg);padding:16px;border-radius:6px;border:1px solid var(--line);">
+          <div style="font-weight:700;margin-bottom:8px">Directory B (Target)</div>
+          <div style="height:120px;display:flex;align-items:center;justify-content:center;">
+            <img id="zoom-img-b" style="max-height:100%;image-rendering:pixelated;transform:scale(2)" alt="Sprite B">
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer" style="display:flex;justify-content:space-between;align-items:center;">
+        <div id="zoom-action-container"></div>
+        <button class="btn" type="button" onclick="closeSideBySideZoom()">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: EXPORT C# SCRIPT -->
+  <div class="modal-backdrop" id="modal-export-cs" hidden>
+    <div class="modal-box modal-lg">
+      <div class="modal-header">
+        <h2>📜 Generated Server C# Script Code</h2>
+        <button class="btn btn-sm" type="button" onclick="closeExportCsModal()">✕</button>
+      </div>
+      <div class="modal-body">
+        <p style="color:var(--muted);margin-top:0;font-size:13px">Ready-to-use C# code for <code>HousePlacementContainer.cs</code> or modular custom house definition. Click "Copy to Clipboard" to paste into your server code.</p>
+        <textarea id="export-cs-content" style="width:100%;height:320px;font-family:Consolas,monospace;font-size:12px;background:var(--bg);color:var(--fg);border:1px solid var(--line);border-radius:4px;padding:10px;" readonly></textarea>
+      </div>
+      <div class="modal-footer">
+        <button class="btn" type="button" onclick="closeExportCsModal()">Close</button>
+        <button class="btn btn-primary" type="button" onclick="copyExportCsToClipboard()">📋 Copy to Clipboard</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: CONFIRMATION DIALOG -->
+  <div class="modal-backdrop" id="modal-confirm" hidden>
+    <div class="modal-box" style="max-width:480px">
+      <div class="modal-header">
+        <h2 id="confirm-modal-title">Confirm Action</h2>
+        <button class="btn btn-sm" type="button" onclick="resolveConfirmModal(false)">✕</button>
+      </div>
+      <div class="modal-body">
+        <p id="confirm-modal-message" style="margin:0 0 10px;font-size:15px;line-height:1.45"></p>
+        <div id="confirm-modal-detail" class="confirm-detail-box" hidden></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn" id="confirm-modal-cancel" type="button" onclick="resolveConfirmModal(false)">Cancel</button>
+        <button class="btn btn-primary" id="confirm-modal-ok" type="button" onclick="resolveConfirmModal(true)">Confirm</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOAST NOTIFICATION CONTAINER -->
+  <div id="toast-container" class="toast-container" aria-live="polite"></div>
+
+  <!-- ORIGINAL LIGHTBOX -->
+  <div class="lb" id="lb" hidden>
+    <div class="lb-top">
+      <h2 id="lb-name"></h2>
+      <span class="meta" id="lb-meta"></span>
+      <div class="seg" id="lb-floors" role="group" aria-label="Floor"></div>
+      <button class="lb-close" id="lb-close" type="button">Close</button>
+    </div>
+    <div class="lb-img"><img id="lb-pic" alt=""></div>
+    <div class="lb-nav">
+      <button id="lb-prev" type="button">Previous</button>
+      <button id="lb-next" type="button">Next</button>
+    </div>
+  </div>
+
+  <script src="/app.js?v=6"></script>
+</body>
+</html>

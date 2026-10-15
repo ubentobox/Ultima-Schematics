@@ -1,0 +1,15 @@
+{
+  "serverFilesDir": "e:\\Projects\\ultima-schematics\\Files",
+  "clientArtDir": "C:\\Ultima-Adventures\\Client\\Data Files",
+  "serverScriptsDir": "E:\\Projects\\ultima-adventures\\Scripts\\Engines and systems\\Houses",
+  "port": 3000,
+  "theme": "dark",
+  "autoOpenBrowser": true,
+  "remoteRepositories": [
+    {
+      "name": "Sosaria Community Housing Repo",
+      "url": "https://raw.githubusercontent.com/runuo/community-housing/main/library.json",
+      "active": false
+    }
+  ]
+}

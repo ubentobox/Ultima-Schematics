@@ -1,0 +1,21 @@
+{
+  "name": "ultima-housing-studio",
+  "version": "1.0.0",
+  "description": "Ultima Online local housing manager, design library, client art comparator, and server script synchronizer",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "keywords": [
+    "ultima-online",
+    "uo",
+    "runuo",
+    "servuo",
+    "modernuo",
+    "housing",
+    "multis",
+    "art-comparator"
+  ],
+  "author": "",
+  "license": "MIT"
+}

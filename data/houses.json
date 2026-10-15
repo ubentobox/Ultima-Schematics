@@ -1,0 +1,1502 @@
+[
+  {
+    "name": "Blue Tent",
+    "multi": 112,
+    "cost": 20736,
+    "storage": 351,
+    "lockdowns": 81,
+    "vendors": 1,
+    "file": "0070_Blue_Tent.png",
+    "w": 8,
+    "d": 8,
+    "floors": [
+      {
+        "z": 0,
+        "file": "0070_f1.png"
+      }
+    ],
+    "tiles": 76
+  },
+  {
+    "name": "Green Tent",
+    "multi": 114,
+    "cost": 20736,
+    "storage": 351,
+    "lockdowns": 81,
+    "vendors": 1,
+    "file": "0072_Green_Tent.png",
+    "w": 8,
+    "d": 8,
+    "floors": [
+      {
+        "z": 0,
+        "file": "0072_f1.png"
+      }
+    ],
+    "tiles": 76
+  },
+  {
+    "name": "Small Stone Home",
+    "multi": 92,
+    "cost": 39168,
+    "storage": 382,
+    "lockdowns": 112,
+    "vendors": 2,
+    "file": "005C_Small_Stone_Home.png",
+    "w": 8,
+    "d": 8,
+    "floors": [
+      {
+        "z": 7,
+        "file": "005C_f1.png"
+      }
+    ],
+    "tiles": 140
+  },
+  {
+    "name": "Small Stone House",
+    "multi": 95,
+    "cost": 39168,
+    "storage": 382,
+    "lockdowns": 112,
+    "vendors": 2,
+    "file": "005F_Small_Stone_House.png",
+    "w": 8,
+    "d": 8,
+    "floors": [
+      {
+        "z": 7,
+        "file": "005F_f1.png"
+      }
+    ],
+    "tiles": 140
+  },
+  {
+    "name": "Stone And Plaster House",
+    "multi": 100,
+    "cost": 39168,
+    "storage": 382,
+    "lockdowns": 112,
+    "vendors": 2,
+    "file": "0064_Stone_And_Plaster_House.png",
+    "w": 8,
+    "d": 8,
+    "floors": [
+      {
+        "z": 7,
+        "file": "0064_f1.png"
+      }
+    ],
+    "tiles": 146
+  },
+  {
+    "name": "Field Stone House",
+    "multi": 102,
+    "cost": 39168,
+    "storage": 382,
+    "lockdowns": 112,
+    "vendors": 2,
+    "file": "0066_Field_Stone_House.png",
+    "w": 8,
+    "d": 8,
+    "floors": [
+      {
+        "z": 7,
+        "file": "0066_f1.png"
+      }
+    ],
+    "tiles": 146
+  },
+  {
+    "name": "Small Brick House",
+    "multi": 104,
+    "cost": 39168,
+    "storage": 382,
+    "lockdowns": 112,
+    "vendors": 2,
+    "file": "0068_Small_Brick_House.png",
+    "w": 8,
+    "d": 8,
+    "floors": [
+      {
+        "z": 7,
+        "file": "0068_f1.png"
+      }
+    ],
+    "tiles": 145
+  },
+  {
+    "name": "Wooden House",
+    "multi": 106,
+    "cost": 39168,
+    "storage": 382,
+    "lockdowns": 112,
+    "vendors": 2,
+    "file": "006A_Wooden_House.png",
+    "w": 8,
+    "d": 8,
+    "floors": [
+      {
+        "z": 7,
+        "file": "006A_f1.png"
+      }
+    ],
+    "tiles": 139
+  },
+  {
+    "name": "Wood And Plaster House",
+    "multi": 108,
+    "cost": 39168,
+    "storage": 382,
+    "lockdowns": 112,
+    "vendors": 2,
+    "file": "006C_Wood_And_Plaster_House.png",
+    "w": 8,
+    "d": 8,
+    "floors": [
+      {
+        "z": 7,
+        "file": "006C_f1.png"
+      }
+    ],
+    "tiles": 145
+  },
+  {
+    "name": "Thatched Roof Cottage",
+    "multi": 110,
+    "cost": 39168,
+    "storage": 382,
+    "lockdowns": 112,
+    "vendors": 2,
+    "file": "006E_Thatched_Roof_Cottage.png",
+    "w": 8,
+    "d": 8,
+    "floors": [
+      {
+        "z": 7,
+        "file": "006E_f1.png"
+      }
+    ],
+    "tiles": 145
+  },
+  {
+    "name": "Small Stone Store Front",
+    "multi": 91,
+    "cost": 56064,
+    "storage": 410,
+    "lockdowns": 140,
+    "vendors": 3,
+    "file": "005B_Small_Stone_Store_Front.png",
+    "w": 12,
+    "d": 8,
+    "floors": [
+      {
+        "z": 7,
+        "file": "005B_f1.png"
+      }
+    ],
+    "tiles": 188
+  },
+  {
+    "name": "Small Wooden Shack Porch",
+    "multi": 96,
+    "cost": 56064,
+    "storage": 410,
+    "lockdowns": 140,
+    "vendors": 3,
+    "file": "0060_Small_Wooden_Shack_Porch.png",
+    "w": 10,
+    "d": 11,
+    "floors": [
+      {
+        "z": 0,
+        "file": "0060_f1.png"
+      }
+    ],
+    "tiles": 248
+  },
+  {
+    "name": "Small Stone Workshop",
+    "multi": 160,
+    "cost": 70656,
+    "storage": 444,
+    "lockdowns": 174,
+    "vendors": 4,
+    "file": "00A0_Small_Stone_Workshop.png",
+    "w": 8,
+    "d": 8,
+    "floors": [
+      {
+        "z": 7,
+        "file": "00A0_f1.png"
+      },
+      {
+        "z": 27,
+        "file": "00A0_f2.png"
+      }
+    ],
+    "tiles": 200
+  },
+  {
+    "name": "Small Marble Workshop",
+    "multi": 162,
+    "cost": 70656,
+    "storage": 444,
+    "lockdowns": 174,
+    "vendors": 4,
+    "file": "00A2_Small_Marble_Workshop.png",
+    "w": 7,
+    "d": 8,
+    "floors": [
+      {
+        "z": 4,
+        "file": "00A2_f1.png"
+      },
+      {
+        "z": 24,
+        "file": "00A2_f2.png"
+      },
+      {
+        "z": 44,
+        "file": "00A2_f3.png"
+      }
+    ],
+    "tiles": 208
+  },
+  {
+    "name": "Plain Stone House",
+    "multi": 98,
+    "cost": 78336,
+    "storage": 456,
+    "lockdowns": 186,
+    "vendors": 5,
+    "file": "0062_Plain_Stone_House.png",
+    "w": 13,
+    "d": 12,
+    "floors": [
+      {
+        "z": 5,
+        "file": "0062_f1.png"
+      }
+    ],
+    "tiles": 300
+  },
+  {
+    "name": "Small Log Cabin With Deck",
+    "multi": 136,
+    "cost": 78336,
+    "storage": 449,
+    "lockdowns": 179,
+    "vendors": 4,
+    "file": "0088_Small_Log_Cabin_With_Deck.png",
+    "w": 15,
+    "d": 9,
+    "floors": [
+      {
+        "z": 10,
+        "file": "0088_f1.png"
+      }
+    ],
+    "tiles": 310
+  },
+  {
+    "name": "Plain Plaster House",
+    "multi": 97,
+    "cost": 85248,
+    "storage": 463,
+    "lockdowns": 193,
+    "vendors": 5,
+    "file": "0061_Plain_Plaster_House.png",
+    "w": 14,
+    "d": 11,
+    "floors": [
+      {
+        "z": 5,
+        "file": "0061_f1.png"
+      }
+    ],
+    "tiles": 314
+  },
+  {
+    "name": "Small Sandstone Workshop",
+    "multi": 132,
+    "cost": 85248,
+    "storage": 458,
+    "lockdowns": 188,
+    "vendors": 5,
+    "file": "0084_Small_Sandstone_Workshop.png",
+    "w": 8,
+    "d": 9,
+    "floors": [
+      {
+        "z": 5,
+        "file": "0084_f1.png"
+      },
+      {
+        "z": 28,
+        "file": "0084_f2.png"
+      },
+      {
+        "z": 48,
+        "file": "0084_f3.png"
+      }
+    ],
+    "tiles": 317
+  },
+  {
+    "name": "Two Story Small Plaster Dwelling",
+    "multi": 130,
+    "cost": 103680,
+    "storage": 470,
+    "lockdowns": 200,
+    "vendors": 5,
+    "file": "0082_Two_Story_Small_Plaster_Dwelling.png",
+    "w": 9,
+    "d": 9,
+    "floors": [
+      {
+        "z": 7,
+        "file": "0082_f1.png"
+      },
+      {
+        "z": 27,
+        "file": "0082_f2.png"
+      }
+    ],
+    "tiles": 259
+  },
+  {
+    "name": "Wagon",
+    "multi": 148,
+    "cost": 103680,
+    "storage": 470,
+    "lockdowns": 200,
+    "vendors": 5,
+    "file": "0094_Wagon.png",
+    "w": 12,
+    "d": 15,
+    "floors": [
+      {
+        "z": 0,
+        "file": "0094_f1.png"
+      },
+      {
+        "z": 25,
+        "file": "0094_f2.png"
+      }
+    ],
+    "tiles": 537
+  },
+  {
+    "name": "Two Story Small Stone Dwelling",
+    "multi": 88,
+    "cost": 103680,
+    "storage": 470,
+    "lockdowns": 200,
+    "vendors": 5,
+    "file": "0058_Two_Story_Small_Stone_Dwelling.png",
+    "w": 9,
+    "d": 9,
+    "floors": [
+      {
+        "z": 5,
+        "file": "0058_f1.png"
+      },
+      {
+        "z": 25,
+        "file": "0058_f2.png"
+      }
+    ],
+    "tiles": 246
+  },
+  {
+    "name": "Two Story Small Stone Home",
+    "multi": 86,
+    "cost": 103680,
+    "storage": 470,
+    "lockdowns": 200,
+    "vendors": 5,
+    "file": "0056_Two_Story_Small_Stone_Home.png",
+    "w": 9,
+    "d": 9,
+    "floors": [
+      {
+        "z": 5,
+        "file": "0056_f1.png"
+      },
+      {
+        "z": 25,
+        "file": "0056_f2.png"
+      }
+    ],
+    "tiles": 252
+  },
+  {
+    "name": "Two Story Small Stone House",
+    "multi": 87,
+    "cost": 103680,
+    "storage": 470,
+    "lockdowns": 200,
+    "vendors": 5,
+    "file": "0057_Two_Story_Small_Stone_House.png",
+    "w": 9,
+    "d": 9,
+    "floors": [
+      {
+        "z": 5,
+        "file": "0057_f1.png"
+      },
+      {
+        "z": 25,
+        "file": "0057_f2.png"
+      }
+    ],
+    "tiles": 256
+  },
+  {
+    "name": "Two Story Small Wooden Dwelling",
+    "multi": 89,
+    "cost": 103680,
+    "storage": 470,
+    "lockdowns": 200,
+    "vendors": 5,
+    "file": "0059_Two_Story_Small_Wooden_Dwelling.png",
+    "w": 9,
+    "d": 9,
+    "floors": [
+      {
+        "z": 5,
+        "file": "0059_f1.png"
+      },
+      {
+        "z": 25,
+        "file": "0059_f2.png"
+      }
+    ],
+    "tiles": 248
+  },
+  {
+    "name": "Two Story Log Cabin",
+    "multi": 154,
+    "cost": 119040,
+    "storage": 478,
+    "lockdowns": 208,
+    "vendors": 5,
+    "file": "009A_Two_Story_Log_Cabin.png",
+    "w": 8,
+    "d": 14,
+    "floors": [
+      {
+        "z": 8,
+        "file": "009A_f1.png"
+      },
+      {
+        "z": 29,
+        "file": "009A_f2.png"
+      }
+    ],
+    "tiles": 323
+  },
+  {
+    "name": "Log Home",
+    "multi": 134,
+    "cost": 119040,
+    "storage": 488,
+    "lockdowns": 218,
+    "vendors": 6,
+    "file": "0086_Log_Home.png",
+    "w": 17,
+    "d": 10,
+    "floors": [
+      {
+        "z": 5,
+        "file": "0086_f1.png"
+      }
+    ],
+    "tiles": 376
+  },
+  {
+    "name": "Small Stone Shoppe",
+    "multi": 82,
+    "cost": 119040,
+    "storage": 478,
+    "lockdowns": 208,
+    "vendors": 5,
+    "file": "0052_Small_Stone_Shoppe.png",
+    "w": 14,
+    "d": 12,
+    "floors": [
+      {
+        "z": 5,
+        "file": "0052_f1.png"
+      }
+    ],
+    "tiles": 362
+  },
+  {
+    "name": "Wooden Home Porch",
+    "multi": 83,
+    "cost": 119040,
+    "storage": 487,
+    "lockdowns": 217,
+    "vendors": 6,
+    "file": "0053_Wooden_Home_Porch.png",
+    "w": 17,
+    "d": 10,
+    "floors": [
+      {
+        "z": 5,
+        "file": "0053_f1.png"
+      }
+    ],
+    "tiles": 370
+  },
+  {
+    "name": "Small Stone Tower",
+    "multi": 152,
+    "cost": 138240,
+    "storage": 500,
+    "lockdowns": 230,
+    "vendors": 6,
+    "file": "0098_Small_Stone_Tower.png",
+    "w": 8,
+    "d": 8,
+    "floors": [
+      {
+        "z": 6,
+        "file": "0098_f1.png"
+      },
+      {
+        "z": 26,
+        "file": "0098_f2.png"
+      },
+      {
+        "z": 46,
+        "file": "0098_f3.png"
+      }
+    ],
+    "tiles": 292
+  },
+  {
+    "name": "Small Stone Temple",
+    "multi": 131,
+    "cost": 184320,
+    "storage": 504,
+    "lockdowns": 234,
+    "vendors": 6,
+    "file": "0083_Small_Stone_Temple.png",
+    "w": 11,
+    "d": 9,
+    "floors": [
+      {
+        "z": 5,
+        "file": "0083_f1.png"
+      },
+      {
+        "z": 25,
+        "file": "0083_f2.png"
+      },
+      {
+        "z": 45,
+        "file": "0083_f3.png"
+      }
+    ],
+    "tiles": 368
+  },
+  {
+    "name": "Brick Home With Front Deck",
+    "multi": 145,
+    "cost": 192000,
+    "storage": 518,
+    "lockdowns": 248,
+    "vendors": 7,
+    "file": "0091_Brick_Home_With_Front_Deck.png",
+    "w": 15,
+    "d": 14,
+    "floors": [
+      {
+        "z": 0,
+        "file": "0091_f1.png"
+      }
+    ],
+    "tiles": 443
+  },
+  {
+    "name": "Plaster House Picture Window",
+    "multi": 79,
+    "cost": 203520,
+    "storage": 515,
+    "lockdowns": 245,
+    "vendors": 7,
+    "file": "004F_Plaster_House_Picture_Window.png",
+    "w": 14,
+    "d": 16,
+    "floors": [
+      {
+        "z": 5,
+        "file": "004F_f1.png"
+      }
+    ],
+    "tiles": 540
+  },
+  {
+    "name": "Stone Home With Enclosed Patio",
+    "multi": 133,
+    "cost": 203520,
+    "storage": 516,
+    "lockdowns": 246,
+    "vendors": 7,
+    "file": "0085_Stone_Home_With_Enclosed_Patio.png",
+    "w": 14,
+    "d": 15,
+    "floors": [
+      {
+        "z": 5,
+        "file": "0085_f1.png"
+      }
+    ],
+    "tiles": 457
+  },
+  {
+    "name": "Sandstone House With Patio",
+    "multi": 156,
+    "cost": 203520,
+    "storage": 520,
+    "lockdowns": 250,
+    "vendors": 7,
+    "file": "009C_Sandstone_House_With_Patio.png",
+    "w": 12,
+    "d": 10,
+    "floors": [
+      {
+        "z": 0,
+        "file": "009C_f1.png"
+      },
+      {
+        "z": 26,
+        "file": "009C_f2.png"
+      }
+    ],
+    "tiles": 304
+  },
+  {
+    "name": "Old Stone Home And Shoppe",
+    "multi": 142,
+    "cost": 222720,
+    "storage": 526,
+    "lockdowns": 256,
+    "vendors": 7,
+    "file": "008E_Old_Stone_Home_And_Shoppe.png",
+    "w": 16,
+    "d": 14,
+    "floors": [
+      {
+        "z": 5,
+        "file": "008E_f1.png"
+      }
+    ],
+    "tiles": 490
+  },
+  {
+    "name": "Brick Home With Large Porch",
+    "multi": 147,
+    "cost": 226560,
+    "storage": 533,
+    "lockdowns": 263,
+    "vendors": 7,
+    "file": "0093_Brick_Home_With_Large_Porch.png",
+    "w": 16,
+    "d": 14,
+    "floors": [
+      {
+        "z": 5,
+        "file": "0093_f1.png"
+      },
+      {
+        "z": 30,
+        "file": "0093_f2.png"
+      }
+    ],
+    "tiles": 657
+  },
+  {
+    "name": "Brick House",
+    "multi": 116,
+    "cost": 238080,
+    "storage": 544,
+    "lockdowns": 274,
+    "vendors": 7,
+    "file": "0074_Brick_House.png",
+    "w": 15,
+    "d": 15,
+    "floors": [
+      {
+        "z": 7,
+        "file": "0074_f1.png"
+      }
+    ],
+    "tiles": 521
+  },
+  {
+    "name": "Large House With Patio",
+    "multi": 140,
+    "cost": 238080,
+    "storage": 546,
+    "lockdowns": 276,
+    "vendors": 8,
+    "file": "008C_Large_House_With_Patio.png",
+    "w": 16,
+    "d": 15,
+    "floors": [
+      {
+        "z": 7,
+        "file": "008C_f1.png"
+      }
+    ],
+    "tiles": 510
+  },
+  {
+    "name": "Two Story Wooden Home With Porch",
+    "multi": 81,
+    "cost": 257280,
+    "storage": 562,
+    "lockdowns": 292,
+    "vendors": 8,
+    "file": "0051_Two_Story_Wooden_Home_With_Porch.png",
+    "w": 14,
+    "d": 12,
+    "floors": [
+      {
+        "z": 5,
+        "file": "0051_f1.png"
+      },
+      {
+        "z": 25,
+        "file": "0051_f2.png"
+      }
+    ],
+    "tiles": 493
+  },
+  {
+    "name": "Two Story Villa",
+    "multi": 158,
+    "cost": 257280,
+    "storage": 560,
+    "lockdowns": 290,
+    "vendors": 8,
+    "file": "009E_Two_Story_Villa.png",
+    "w": 12,
+    "d": 12,
+    "floors": [
+      {
+        "z": 5,
+        "file": "009E_f1.png"
+      },
+      {
+        "z": 25,
+        "file": "009E_f2.png"
+      }
+    ],
+    "tiles": 450
+  },
+  {
+    "name": "Two Story Brick House",
+    "multi": 78,
+    "cost": 258048,
+    "storage": 568,
+    "lockdowns": 298,
+    "vendors": 8,
+    "file": "004E_Two_Story_Brick_House.png",
+    "w": 11,
+    "d": 12,
+    "floors": [
+      {
+        "z": 5,
+        "file": "004E_f1.png"
+      },
+      {
+        "z": 25,
+        "file": "004E_f2.png"
+      }
+    ],
+    "tiles": 452
+  },
+  {
+    "name": "Fancy Stone Wood Home",
+    "multi": 93,
+    "cost": 288000,
+    "storage": 580,
+    "lockdowns": 310,
+    "vendors": 9,
+    "file": "005D_Fancy_Stone_Wood_Home.png",
+    "w": 12,
+    "d": 11,
+    "floors": [
+      {
+        "z": 7,
+        "file": "005D_f1.png"
+      },
+      {
+        "z": 27,
+        "file": "005D_f2.png"
+      },
+      {
+        "z": 49,
+        "file": "005D_f3.png"
+      }
+    ],
+    "tiles": 560
+  },
+  {
+    "name": "Two Story Stone Villa",
+    "multi": 129,
+    "cost": 288000,
+    "storage": 589,
+    "lockdowns": 319,
+    "vendors": 9,
+    "file": "0081_Two_Story_Stone_Villa.png",
+    "w": 11,
+    "d": 17,
+    "floors": [
+      {
+        "z": 5,
+        "file": "0081_f1.png"
+      },
+      {
+        "z": 25,
+        "file": "0081_f2.png"
+      }
+    ],
+    "tiles": 512
+  },
+  {
+    "name": "Wooden Home Upper Deck",
+    "multi": 128,
+    "cost": 288000,
+    "storage": 590,
+    "lockdowns": 320,
+    "vendors": 9,
+    "file": "0080_Wooden_Home_Upper_Deck.png",
+    "w": 14,
+    "d": 10,
+    "floors": [
+      {
+        "z": 5,
+        "file": "0080_f1.png"
+      },
+      {
+        "z": 25,
+        "file": "0080_f2.png"
+      }
+    ],
+    "tiles": 440
+  },
+  {
+    "name": "Brick Arena",
+    "multi": 138,
+    "cost": 318720,
+    "storage": 608,
+    "lockdowns": 338,
+    "vendors": 10,
+    "file": "008A_Brick_Arena.png",
+    "w": 18,
+    "d": 22,
+    "floors": [
+      {
+        "z": 6,
+        "file": "008A_f1.png"
+      }
+    ],
+    "tiles": 696
+  },
+  {
+    "name": "Marble Shoppe",
+    "multi": 146,
+    "cost": 318720,
+    "storage": 608,
+    "lockdowns": 338,
+    "vendors": 10,
+    "file": "0092_Marble_Shoppe.png",
+    "w": 13,
+    "d": 12,
+    "floors": [
+      {
+        "z": 5,
+        "file": "0092_f1.png"
+      },
+      {
+        "z": 25,
+        "file": "0092_f2.png"
+      }
+    ],
+    "tiles": 519
+  },
+  {
+    "name": "Plaster Home With Dirt Deck",
+    "multi": 99,
+    "cost": 357120,
+    "storage": 622,
+    "lockdowns": 352,
+    "vendors": 10,
+    "file": "0063_Plaster_Home_With_Dirt_Deck.png",
+    "w": 11,
+    "d": 14,
+    "floors": [
+      {
+        "z": 5,
+        "file": "0063_f1.png"
+      },
+      {
+        "z": 25,
+        "file": "0063_f2.png"
+      }
+    ],
+    "tiles": 521
+  },
+  {
+    "name": "Two Story Brick Home",
+    "multi": 80,
+    "cost": 360960,
+    "storage": 625,
+    "lockdowns": 355,
+    "vendors": 10,
+    "file": "0050_Two_Story_Brick_Home.png",
+    "w": 14,
+    "d": 17,
+    "floors": [
+      {
+        "z": 5,
+        "file": "0050_f1.png"
+      },
+      {
+        "z": 25,
+        "file": "0050_f2.png"
+      }
+    ],
+    "tiles": 612
+  },
+  {
+    "name": "Brick House With Steeple",
+    "multi": 77,
+    "cost": 376320,
+    "storage": 654,
+    "lockdowns": 384,
+    "vendors": 11,
+    "file": "004D_Brick_House_With_Steeple.png",
+    "w": 13,
+    "d": 13,
+    "floors": [
+      {
+        "z": 5,
+        "file": "004D_f1.png"
+      },
+      {
+        "z": 25,
+        "file": "004D_f2.png"
+      },
+      {
+        "z": 45,
+        "file": "004D_f3.png"
+      },
+      {
+        "z": 65,
+        "file": "004D_f4.png"
+      }
+    ],
+    "tiles": 576
+  },
+  {
+    "name": "Fancy Wooden Stone House",
+    "multi": 94,
+    "cost": 376320,
+    "storage": 653,
+    "lockdowns": 383,
+    "vendors": 11,
+    "file": "005E_Fancy_Wooden_Stone_House.png",
+    "w": 12,
+    "d": 16,
+    "floors": [
+      {
+        "z": 7,
+        "file": "005E_f1.png"
+      },
+      {
+        "z": 27,
+        "file": "005E_f2.png"
+      },
+      {
+        "z": 49,
+        "file": "005E_f3.png"
+      }
+    ],
+    "tiles": 781
+  },
+  {
+    "name": "Two Story Wood And Plaster House",
+    "multi": 118,
+    "cost": 403200,
+    "storage": 694,
+    "lockdowns": 424,
+    "vendors": 12,
+    "file": "0076_Two_Story_Wood_And_Plaster_House.png",
+    "w": 15,
+    "d": 15,
+    "floors": [
+      {
+        "z": 7,
+        "file": "0076_f1.png"
+      },
+      {
+        "z": 27,
+        "file": "0076_f2.png"
+      }
+    ],
+    "tiles": 646
+  },
+  {
+    "name": "Two Story Stone And Plaster House",
+    "multi": 120,
+    "cost": 403200,
+    "storage": 694,
+    "lockdowns": 424,
+    "vendors": 12,
+    "file": "0078_Two_Story_Stone_And_Plaster_House.png",
+    "w": 15,
+    "d": 15,
+    "floors": [
+      {
+        "z": 7,
+        "file": "0078_f1.png"
+      },
+      {
+        "z": 27,
+        "file": "0078_f2.png"
+      }
+    ],
+    "tiles": 643
+  },
+  {
+    "name": "Marble House With Patio",
+    "multi": 150,
+    "cost": 403200,
+    "storage": 700,
+    "lockdowns": 430,
+    "vendors": 13,
+    "file": "0096_Marble_House_With_Patio.png",
+    "w": 15,
+    "d": 15,
+    "floors": [
+      {
+        "z": 4,
+        "file": "0096_f1.png"
+      },
+      {
+        "z": 24,
+        "file": "0096_f2.png"
+      },
+      {
+        "z": 44,
+        "file": "0096_f3.png"
+      }
+    ],
+    "tiles": 639
+  },
+  {
+    "name": "Two Story Sandstone House",
+    "multi": 76,
+    "cost": 403200,
+    "storage": 725,
+    "lockdowns": 455,
+    "vendors": 14,
+    "file": "004C_Two_Story_Sandstone_House.png",
+    "w": 14,
+    "d": 10,
+    "floors": [
+      {
+        "z": 6,
+        "file": "004C_f1.png"
+      },
+      {
+        "z": 26,
+        "file": "004C_f2.png"
+      },
+      {
+        "z": 46,
+        "file": "004C_f3.png"
+      }
+    ],
+    "tiles": 631
+  },
+  {
+    "name": "Small Tower Of Stone",
+    "multi": 84,
+    "cost": 526080,
+    "storage": 731,
+    "lockdowns": 461,
+    "vendors": 14,
+    "file": "0054_Small_Tower_Of_Stone.png",
+    "w": 11,
+    "d": 13,
+    "floors": [
+      {
+        "z": 5,
+        "file": "0054_f1.png"
+      },
+      {
+        "z": 25,
+        "file": "0054_f2.png"
+      },
+      {
+        "z": 45,
+        "file": "0054_f3.png"
+      }
+    ],
+    "tiles": 685
+  },
+  {
+    "name": "Small Brick Castle",
+    "multi": 143,
+    "cost": 526080,
+    "storage": 743,
+    "lockdowns": 473,
+    "vendors": 14,
+    "file": "008F_Small_Brick_Castle.png",
+    "w": 14,
+    "d": 13,
+    "floors": [
+      {
+        "z": 5,
+        "file": "008F_f1.png"
+      },
+      {
+        "z": 25,
+        "file": "008F_f2.png"
+      },
+      {
+        "z": 45,
+        "file": "008F_f3.png"
+      }
+    ],
+    "tiles": 684
+  },
+  {
+    "name": "Stone Fort",
+    "multi": 139,
+    "cost": 545280,
+    "storage": 750,
+    "lockdowns": 480,
+    "vendors": 14,
+    "file": "008B_Stone_Fort.png",
+    "w": 17,
+    "d": 15,
+    "floors": [
+      {
+        "z": 7,
+        "file": "008B_f1.png"
+      },
+      {
+        "z": 27,
+        "file": "008B_f2.png"
+      }
+    ],
+    "tiles": 757
+  },
+  {
+    "name": "Castle Tower",
+    "multi": 74,
+    "cost": 576000,
+    "storage": 839,
+    "lockdowns": 569,
+    "vendors": 17,
+    "file": "004A_Castle_Tower.png",
+    "w": 13,
+    "d": 14,
+    "floors": [
+      {
+        "z": 0,
+        "file": "004A_f1.png"
+      },
+      {
+        "z": 27,
+        "file": "004A_f2.png"
+      },
+      {
+        "z": 49,
+        "file": "004A_f3.png"
+      },
+      {
+        "z": 71,
+        "file": "004A_f4.png"
+      }
+    ],
+    "tiles": 1065
+  },
+  {
+    "name": "Raised Brick Home",
+    "multi": 137,
+    "cost": 579840,
+    "storage": 866,
+    "lockdowns": 596,
+    "vendors": 18,
+    "file": "0089_Raised_Brick_Home.png",
+    "w": 13,
+    "d": 14,
+    "floors": [
+      {
+        "z": 5,
+        "file": "0089_f1.png"
+      },
+      {
+        "z": 25,
+        "file": "0089_f2.png"
+      },
+      {
+        "z": 45,
+        "file": "0089_f3.png"
+      }
+    ],
+    "tiles": 724
+  },
+  {
+    "name": "Small Wizard Tower",
+    "multi": 144,
+    "cost": 710400,
+    "storage": 869,
+    "lockdowns": 599,
+    "vendors": 18,
+    "file": "0090_Small_Wizard_Tower.png",
+    "w": 17,
+    "d": 13,
+    "floors": [
+      {
+        "z": 5,
+        "file": "0090_f1.png"
+      },
+      {
+        "z": 25,
+        "file": "0090_f2.png"
+      },
+      {
+        "z": 45,
+        "file": "0090_f3.png"
+      }
+    ],
+    "tiles": 711
+  },
+  {
+    "name": "Wooden Mansion",
+    "multi": 90,
+    "cost": 744960,
+    "storage": 920,
+    "lockdowns": 650,
+    "vendors": 20,
+    "file": "005A_Wooden_Mansion.png",
+    "w": 15,
+    "d": 14,
+    "floors": [
+      {
+        "z": 5,
+        "file": "005A_f1.png"
+      },
+      {
+        "z": 25,
+        "file": "005A_f2.png"
+      },
+      {
+        "z": 45,
+        "file": "005A_f3.png"
+      }
+    ],
+    "tiles": 948
+  },
+  {
+    "name": "Three Story Stone Villa",
+    "multi": 85,
+    "cost": 852480,
+    "storage": 965,
+    "lockdowns": 695,
+    "vendors": 22,
+    "file": "0055_Three_Story_Stone_Villa.png",
+    "w": 16,
+    "d": 14,
+    "floors": [
+      {
+        "z": 5,
+        "file": "0055_f1.png"
+      },
+      {
+        "z": 25,
+        "file": "0055_f2.png"
+      },
+      {
+        "z": 45,
+        "file": "0055_f3.png"
+      }
+    ],
+    "tiles": 972
+  },
+  {
+    "name": "Tower",
+    "multi": 122,
+    "cost": 921600,
+    "storage": 1476,
+    "lockdowns": 1206,
+    "vendors": 24,
+    "file": "007A_Tower.png",
+    "w": 24,
+    "d": 16,
+    "floors": [
+      {
+        "z": 6,
+        "file": "007A_f1.png"
+      },
+      {
+        "z": 26,
+        "file": "007A_f2.png"
+      },
+      {
+        "z": 46,
+        "file": "007A_f3.png"
+      },
+      {
+        "z": 66,
+        "file": "007A_f4.png"
+      }
+    ],
+    "tiles": 1460
+  },
+  {
+    "name": "Large Tent",
+    "multi": 73,
+    "cost": 1075200,
+    "storage": 1572,
+    "lockdowns": 1302,
+    "vendors": 28,
+    "file": "0049_Large_Tent.png",
+    "w": 25,
+    "d": 26,
+    "floors": [
+      {
+        "z": 0,
+        "file": "0049_f1.png"
+      },
+      {
+        "z": 25,
+        "file": "0049_f2.png"
+      }
+    ],
+    "tiles": 2110
+  },
+  {
+    "name": "Small Stone Keep",
+    "multi": 124,
+    "cost": 1536000,
+    "storage": 2847,
+    "lockdowns": 2577,
+    "vendors": 30,
+    "file": "007C_Small_Stone_Keep.png",
+    "w": 24,
+    "d": 24,
+    "floors": [
+      {
+        "z": 6,
+        "file": "007C_f1.png"
+      },
+      {
+        "z": 26,
+        "file": "007C_f2.png"
+      },
+      {
+        "z": 46,
+        "file": "007C_f3.png"
+      }
+    ],
+    "tiles": 2346
+  },
+  {
+    "name": "Pyramid",
+    "multi": 72,
+    "cost": 1612800,
+    "storage": 3856,
+    "lockdowns": 3586,
+    "vendors": 32,
+    "file": "0048_Pyramid.png",
+    "w": 32,
+    "d": 32,
+    "floors": [
+      {
+        "z": 0,
+        "file": "0048_f1.png"
+      },
+      {
+        "z": 15,
+        "file": "0048_f2.png"
+      },
+      {
+        "z": 30,
+        "file": "0048_f3.png"
+      },
+      {
+        "z": 50,
+        "file": "0048_f4.png"
+      }
+    ],
+    "tiles": 4277
+  },
+  {
+    "name": "Castle",
+    "multi": 126,
+    "cost": 2304000,
+    "storage": 4777,
+    "lockdowns": 4507,
+    "vendors": 34,
+    "file": "007E_Castle.png",
+    "w": 31,
+    "d": 32,
+    "floors": [
+      {
+        "z": 6,
+        "file": "007E_f1.png"
+      },
+      {
+        "z": 26,
+        "file": "007E_f2.png"
+      },
+      {
+        "z": 46,
+        "file": "007E_f3.png"
+      }
+    ],
+    "tiles": 3452
+  },
+  {
+    "name": "Fortress",
+    "multi": 75,
+    "cost": 2995200,
+    "storage": 6448,
+    "lockdowns": 6178,
+    "vendors": 36,
+    "file": "004B_Fortress.png",
+    "w": 32,
+    "d": 33,
+    "floors": [
+      {
+        "z": 0,
+        "file": "004B_f1.png"
+      },
+      {
+        "z": 27,
+        "file": "004B_f2.png"
+      },
+      {
+        "z": 49,
+        "file": "004B_f3.png"
+      },
+      {
+        "z": 71,
+        "file": "004B_f4.png"
+      }
+    ],
+    "tiles": 5799
+  }
+]

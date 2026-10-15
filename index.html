@@ -1,0 +1,199 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Ultima Adventures House Gallery</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=Source+Sans+3:wght@400;600&display=swap">
+<style>
+/* Layout: sticky toolbar over a wrapping grid of house cards; each card has its own floor selector; click the image for a full-size lightbox */
+:root{
+  --bg:#ece7dc; --panel:#f7f4ec; --fg:#2b2620; --muted:#6b6256; --line:#cfc6b4; --accent:#8a5a1e; --accent-fg:#fff; --thumb:#dcd5c5;
+  --display:'Cinzel',Georgia,serif; --body:'Source Sans 3','Segoe UI',system-ui,sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#1c1a17; --panel:#26231e; --fg:#e8e1d3; --muted:#a69c89; --line:#3d3830; --accent:#d6a24a; --accent-fg:#1c1a17; --thumb:#141210; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#1c1a17; --panel:#26231e; --fg:#e8e1d3; --muted:#a69c89; --line:#3d3830; --accent:#d6a24a; --accent-fg:#1c1a17; --thumb:#141210; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--body);font-size:15px;line-height:1.45;padding-inline:16px;padding-block:0 32px}
+header{max-width:1400px;margin:0 auto;padding-block:28px 12px}
+h1{font-family:var(--display);font-weight:700;font-size:clamp(22px,3.5vw,34px);margin:0 0 6px;text-wrap:balance;letter-spacing:.02em}
+.sub{color:var(--muted);margin:0;max-width:65ch}
+.bar{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);border-bottom:1px solid var(--line);margin-inline:-16px;padding:10px 16px}
+.bar-in{max-width:1400px;margin:0 auto;display:flex;flex-wrap:wrap;gap:10px 18px;align-items:center}
+.bar label{display:flex;align-items:center;gap:6px;color:var(--muted);font-size:13px;text-transform:uppercase;letter-spacing:.06em}
+input[type=search],select{font:inherit;color:var(--fg);background:var(--panel);border:1px solid var(--line);border-radius:4px;padding:6px 9px;min-width:0}
+input[type=search]{width:200px;max-width:100%}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:4px;overflow:hidden}
+.seg button{font:inherit;font-size:13px;background:var(--panel);color:var(--fg);border:0;padding:6px 12px;cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-fg)}
+.seg.small button{padding:3px 9px;font-size:12px}
+button:focus-visible,.pic:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.count{color:var(--muted);font-size:13px;margin-left:auto;font-variant-numeric:tabular-nums}
+.grid{max-width:1400px;margin:18px auto 0;display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:16px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:10px;display:flex;flex-direction:column;gap:8px;min-width:0}
+.pic{background:var(--thumb);border:0;border-radius:4px;aspect-ratio:1/1;max-width:100%;display:flex;align-items:center;justify-content:center;overflow:hidden;cursor:zoom-in;padding:0;width:100%}
+.pic img{max-width:100%;max-height:100%;object-fit:contain}
+.row{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.name{font-family:var(--display);font-weight:500;font-size:15px;line-height:1.25}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:2px 10px;font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums}
+.stats b{color:var(--fg);font-weight:600}
+.cost{font-size:14px;color:var(--accent);font-weight:600;font-variant-numeric:tabular-nums}
+.lb{position:fixed;inset:0;background:rgba(0,0,0,.84);z-index:20;display:flex;flex-direction:column;padding:12px}
+.lb-top{display:flex;flex-wrap:wrap;align-items:center;gap:8px 16px;color:#eee;padding:4px 4px 10px}
+.lb-top h2{font-family:var(--display);font-size:18px;margin:0;font-weight:500}
+.lb-top .meta{font-size:13px;color:#bbb;font-variant-numeric:tabular-nums}
+.lb button{font:inherit;font-size:13px;background:#2a2a2a;color:#eee;border:1px solid #555;border-radius:4px;padding:6px 12px;cursor:pointer}
+.lb .seg{border-color:#555}
+.lb .seg button{border:0;border-radius:0}
+.lb button[aria-pressed="true"]{background:var(--accent);color:var(--accent-fg);border-color:var(--accent)}
+.lb-close{margin-left:auto}
+.lb-img{flex:1;min-height:0;overflow:auto;display:flex;align-items:flex-start;justify-content:center}
+.lb-img img{max-width:100%;height:auto}
+.lb-nav{display:flex;justify-content:space-between;gap:8px;padding-top:10px}
+footer{margin:28px auto 0;color:var(--muted);font-size:13px;max-width:70ch}
+@media (prefers-reduced-motion:no-preference){.card{transition:border-color .15s}}
+</style>
+
+<header>
+  <h1>Ultima Adventures House Gallery</h1>
+  <p class="sub">Every prebuilt house the placement tool offers, rendered from the client's own art files. Each house has a floor selector: a floor view hides everything above that floor, the same way the game does when you stand inside. Prices are the bank cost at placement.</p>
+</header>
+
+<div class="bar"><div class="bar-in">
+  <div class="seg" role="group" aria-label="Default view for all houses">
+    <button data-view="full" aria-pressed="true">Full</button>
+    <button data-view="ground" aria-pressed="false">Ground floor</button>
+    <button data-view="top" aria-pressed="false">Top floor</button>
+  </div>
+  <label>Sort <select id="sort">
+    <option value="cost">Price</option>
+    <option value="storage">Storage</option>
+    <option value="lockdowns">Lockdowns</option>
+    <option value="vendors">Vendors</option>
+    <option value="floors">Floors</option>
+    <option value="name">Name</option>
+  </select></label>
+  <label>Find <input type="search" id="q" placeholder="stone, tower, villa"></label>
+  <span class="count" id="count"></span>
+</div></div>
+
+<div class="grid" id="grid"></div>
+
+<footer>Storage and lockdowns are the house's secure-container and item limits. Footprint is the multi's tile extent, including steps. Floors are detected from the walkable tiles in the multi, so a roof terrace or a steeple can count as a floor. Doors and the house sign are added by the server at placement and are not part of the artwork.</footer>
+
+<div class="lb" id="lb" hidden>
+  <div class="lb-top">
+    <h2 id="lb-name"></h2>
+    <span class="meta" id="lb-meta"></span>
+    <div class="seg" id="lb-floors" role="group" aria-label="Floor"></div>
+    <button class="lb-close" id="lb-close">Close</button>
+  </div>
+  <div class="lb-img"><img id="lb-pic" alt=""></div>
+  <div class="lb-nav"><button id="lb-prev">Previous</button><button id="lb-next">Next</button></div>
+</div>
+
+<script>
+const HOUSES = [{"name":"Blue Tent","multi":112,"cost":20736,"storage":351,"lockdowns":81,"vendors":1,"file":"0070_Blue_Tent.png","w":8,"d":8,"floors":[{"z":0,"file":"0070_f1.png"}],"tiles":76},{"name":"Green Tent","multi":114,"cost":20736,"storage":351,"lockdowns":81,"vendors":1,"file":"0072_Green_Tent.png","w":8,"d":8,"floors":[{"z":0,"file":"0072_f1.png"}],"tiles":76},{"name":"Small Stone Home","multi":92,"cost":39168,"storage":382,"lockdowns":112,"vendors":2,"file":"005C_Small_Stone_Home.png","w":8,"d":8,"floors":[{"z":7,"file":"005C_f1.png"}],"tiles":140},{"name":"Small Stone House","multi":95,"cost":39168,"storage":382,"lockdowns":112,"vendors":2,"file":"005F_Small_Stone_House.png","w":8,"d":8,"floors":[{"z":7,"file":"005F_f1.png"}],"tiles":140},{"name":"Stone And Plaster House","multi":100,"cost":39168,"storage":382,"lockdowns":112,"vendors":2,"file":"0064_Stone_And_Plaster_House.png","w":8,"d":8,"floors":[{"z":7,"file":"0064_f1.png"}],"tiles":146},{"name":"Field Stone House","multi":102,"cost":39168,"storage":382,"lockdowns":112,"vendors":2,"file":"0066_Field_Stone_House.png","w":8,"d":8,"floors":[{"z":7,"file":"0066_f1.png"}],"tiles":146},{"name":"Small Brick House","multi":104,"cost":39168,"storage":382,"lockdowns":112,"vendors":2,"file":"0068_Small_Brick_House.png","w":8,"d":8,"floors":[{"z":7,"file":"0068_f1.png"}],"tiles":145},{"name":"Wooden House","multi":106,"cost":39168,"storage":382,"lockdowns":112,"vendors":2,"file":"006A_Wooden_House.png","w":8,"d":8,"floors":[{"z":7,"file":"006A_f1.png"}],"tiles":139},{"name":"Wood And Plaster House","multi":108,"cost":39168,"storage":382,"lockdowns":112,"vendors":2,"file":"006C_Wood_And_Plaster_House.png","w":8,"d":8,"floors":[{"z":7,"file":"006C_f1.png"}],"tiles":145},{"name":"Thatched Roof Cottage","multi":110,"cost":39168,"storage":382,"lockdowns":112,"vendors":2,"file":"006E_Thatched_Roof_Cottage.png","w":8,"d":8,"floors":[{"z":7,"file":"006E_f1.png"}],"tiles":145},{"name":"Small Stone Store Front","multi":91,"cost":56064,"storage":410,"lockdowns":140,"vendors":3,"file":"005B_Small_Stone_Store_Front.png","w":12,"d":8,"floors":[{"z":7,"file":"005B_f1.png"}],"tiles":188},{"name":"Small Wooden Shack Porch","multi":96,"cost":56064,"storage":410,"lockdowns":140,"vendors":3,"file":"0060_Small_Wooden_Shack_Porch.png","w":10,"d":11,"floors":[{"z":0,"file":"0060_f1.png"}],"tiles":248},{"name":"Small Stone Workshop","multi":160,"cost":70656,"storage":444,"lockdowns":174,"vendors":4,"file":"00A0_Small_Stone_Workshop.png","w":8,"d":8,"floors":[{"z":7,"file":"00A0_f1.png"},{"z":27,"file":"00A0_f2.png"}],"tiles":200},{"name":"Small Marble Workshop","multi":162,"cost":70656,"storage":444,"lockdowns":174,"vendors":4,"file":"00A2_Small_Marble_Workshop.png","w":7,"d":8,"floors":[{"z":4,"file":"00A2_f1.png"},{"z":24,"file":"00A2_f2.png"},{"z":44,"file":"00A2_f3.png"}],"tiles":208},{"name":"Plain Stone House","multi":98,"cost":78336,"storage":456,"lockdowns":186,"vendors":5,"file":"0062_Plain_Stone_House.png","w":13,"d":12,"floors":[{"z":5,"file":"0062_f1.png"}],"tiles":300},{"name":"Small Log Cabin With Deck","multi":136,"cost":78336,"storage":449,"lockdowns":179,"vendors":4,"file":"0088_Small_Log_Cabin_With_Deck.png","w":15,"d":9,"floors":[{"z":10,"file":"0088_f1.png"}],"tiles":310},{"name":"Plain Plaster House","multi":97,"cost":85248,"storage":463,"lockdowns":193,"vendors":5,"file":"0061_Plain_Plaster_House.png","w":14,"d":11,"floors":[{"z":5,"file":"0061_f1.png"}],"tiles":314},{"name":"Small Sandstone Workshop","multi":132,"cost":85248,"storage":458,"lockdowns":188,"vendors":5,"file":"0084_Small_Sandstone_Workshop.png","w":8,"d":9,"floors":[{"z":5,"file":"0084_f1.png"},{"z":28,"file":"0084_f2.png"},{"z":48,"file":"0084_f3.png"}],"tiles":317},{"name":"Two Story Small Plaster Dwelling","multi":130,"cost":103680,"storage":470,"lockdowns":200,"vendors":5,"file":"0082_Two_Story_Small_Plaster_Dwelling.png","w":9,"d":9,"floors":[{"z":7,"file":"0082_f1.png"},{"z":27,"file":"0082_f2.png"}],"tiles":259},{"name":"Wagon","multi":148,"cost":103680,"storage":470,"lockdowns":200,"vendors":5,"file":"0094_Wagon.png","w":12,"d":15,"floors":[{"z":0,"file":"0094_f1.png"},{"z":25,"file":"0094_f2.png"}],"tiles":537},{"name":"Two Story Small Stone Dwelling","multi":88,"cost":103680,"storage":470,"lockdowns":200,"vendors":5,"file":"0058_Two_Story_Small_Stone_Dwelling.png","w":9,"d":9,"floors":[{"z":5,"file":"0058_f1.png"},{"z":25,"file":"0058_f2.png"}],"tiles":246},{"name":"Two Story Small Stone Home","multi":86,"cost":103680,"storage":470,"lockdowns":200,"vendors":5,"file":"0056_Two_Story_Small_Stone_Home.png","w":9,"d":9,"floors":[{"z":5,"file":"0056_f1.png"},{"z":25,"file":"0056_f2.png"}],"tiles":252},{"name":"Two Story Small Stone House","multi":87,"cost":103680,"storage":470,"lockdowns":200,"vendors":5,"file":"0057_Two_Story_Small_Stone_House.png","w":9,"d":9,"floors":[{"z":5,"file":"0057_f1.png"},{"z":25,"file":"0057_f2.png"}],"tiles":256},{"name":"Two Story Small Wooden Dwelling","multi":89,"cost":103680,"storage":470,"lockdowns":200,"vendors":5,"file":"0059_Two_Story_Small_Wooden_Dwelling.png","w":9,"d":9,"floors":[{"z":5,"file":"0059_f1.png"},{"z":25,"file":"0059_f2.png"}],"tiles":248},{"name":"Two Story Log Cabin","multi":154,"cost":119040,"storage":478,"lockdowns":208,"vendors":5,"file":"009A_Two_Story_Log_Cabin.png","w":8,"d":14,"floors":[{"z":8,"file":"009A_f1.png"},{"z":29,"file":"009A_f2.png"}],"tiles":323},{"name":"Log Home","multi":134,"cost":119040,"storage":488,"lockdowns":218,"vendors":6,"file":"0086_Log_Home.png","w":17,"d":10,"floors":[{"z":5,"file":"0086_f1.png"}],"tiles":376},{"name":"Small Stone Shoppe","multi":82,"cost":119040,"storage":478,"lockdowns":208,"vendors":5,"file":"0052_Small_Stone_Shoppe.png","w":14,"d":12,"floors":[{"z":5,"file":"0052_f1.png"}],"tiles":362},{"name":"Wooden Home Porch","multi":83,"cost":119040,"storage":487,"lockdowns":217,"vendors":6,"file":"0053_Wooden_Home_Porch.png","w":17,"d":10,"floors":[{"z":5,"file":"0053_f1.png"}],"tiles":370},{"name":"Small Stone Tower","multi":152,"cost":138240,"storage":500,"lockdowns":230,"vendors":6,"file":"0098_Small_Stone_Tower.png","w":8,"d":8,"floors":[{"z":6,"file":"0098_f1.png"},{"z":26,"file":"0098_f2.png"},{"z":46,"file":"0098_f3.png"}],"tiles":292},{"name":"Small Stone Temple","multi":131,"cost":184320,"storage":504,"lockdowns":234,"vendors":6,"file":"0083_Small_Stone_Temple.png","w":11,"d":9,"floors":[{"z":5,"file":"0083_f1.png"},{"z":25,"file":"0083_f2.png"},{"z":45,"file":"0083_f3.png"}],"tiles":368},{"name":"Brick Home With Front Deck","multi":145,"cost":192000,"storage":518,"lockdowns":248,"vendors":7,"file":"0091_Brick_Home_With_Front_Deck.png","w":15,"d":14,"floors":[{"z":0,"file":"0091_f1.png"}],"tiles":443},{"name":"Plaster House Picture Window","multi":79,"cost":203520,"storage":515,"lockdowns":245,"vendors":7,"file":"004F_Plaster_House_Picture_Window.png","w":14,"d":16,"floors":[{"z":5,"file":"004F_f1.png"}],"tiles":540},{"name":"Stone Home With Enclosed Patio","multi":133,"cost":203520,"storage":516,"lockdowns":246,"vendors":7,"file":"0085_Stone_Home_With_Enclosed_Patio.png","w":14,"d":15,"floors":[{"z":5,"file":"0085_f1.png"}],"tiles":457},{"name":"Sandstone House With Patio","multi":156,"cost":203520,"storage":520,"lockdowns":250,"vendors":7,"file":"009C_Sandstone_House_With_Patio.png","w":12,"d":10,"floors":[{"z":0,"file":"009C_f1.png"},{"z":26,"file":"009C_f2.png"}],"tiles":304},{"name":"Old Stone Home And Shoppe","multi":142,"cost":222720,"storage":526,"lockdowns":256,"vendors":7,"file":"008E_Old_Stone_Home_And_Shoppe.png","w":16,"d":14,"floors":[{"z":5,"file":"008E_f1.png"}],"tiles":490},{"name":"Brick Home With Large Porch","multi":147,"cost":226560,"storage":533,"lockdowns":263,"vendors":7,"file":"0093_Brick_Home_With_Large_Porch.png","w":16,"d":14,"floors":[{"z":5,"file":"0093_f1.png"},{"z":30,"file":"0093_f2.png"}],"tiles":657},{"name":"Brick House","multi":116,"cost":238080,"storage":544,"lockdowns":274,"vendors":7,"file":"0074_Brick_House.png","w":15,"d":15,"floors":[{"z":7,"file":"0074_f1.png"}],"tiles":521},{"name":"Large House With Patio","multi":140,"cost":238080,"storage":546,"lockdowns":276,"vendors":8,"file":"008C_Large_House_With_Patio.png","w":16,"d":15,"floors":[{"z":7,"file":"008C_f1.png"}],"tiles":510},{"name":"Two Story Wooden Home With Porch","multi":81,"cost":257280,"storage":562,"lockdowns":292,"vendors":8,"file":"0051_Two_Story_Wooden_Home_With_Porch.png","w":14,"d":12,"floors":[{"z":5,"file":"0051_f1.png"},{"z":25,"file":"0051_f2.png"}],"tiles":493},{"name":"Two Story Villa","multi":158,"cost":257280,"storage":560,"lockdowns":290,"vendors":8,"file":"009E_Two_Story_Villa.png","w":12,"d":12,"floors":[{"z":5,"file":"009E_f1.png"},{"z":25,"file":"009E_f2.png"}],"tiles":450},{"name":"Two Story Brick House","multi":78,"cost":258048,"storage":568,"lockdowns":298,"vendors":8,"file":"004E_Two_Story_Brick_House.png","w":11,"d":12,"floors":[{"z":5,"file":"004E_f1.png"},{"z":25,"file":"004E_f2.png"}],"tiles":452},{"name":"Fancy Stone Wood Home","multi":93,"cost":288000,"storage":580,"lockdowns":310,"vendors":9,"file":"005D_Fancy_Stone_Wood_Home.png","w":12,"d":11,"floors":[{"z":7,"file":"005D_f1.png"},{"z":27,"file":"005D_f2.png"},{"z":49,"file":"005D_f3.png"}],"tiles":560},{"name":"Two Story Stone Villa","multi":129,"cost":288000,"storage":589,"lockdowns":319,"vendors":9,"file":"0081_Two_Story_Stone_Villa.png","w":11,"d":17,"floors":[{"z":5,"file":"0081_f1.png"},{"z":25,"file":"0081_f2.png"}],"tiles":512},{"name":"Wooden Home Upper Deck","multi":128,"cost":288000,"storage":590,"lockdowns":320,"vendors":9,"file":"0080_Wooden_Home_Upper_Deck.png","w":14,"d":10,"floors":[{"z":5,"file":"0080_f1.png"},{"z":25,"file":"0080_f2.png"}],"tiles":440},{"name":"Brick Arena","multi":138,"cost":318720,"storage":608,"lockdowns":338,"vendors":10,"file":"008A_Brick_Arena.png","w":18,"d":22,"floors":[{"z":6,"file":"008A_f1.png"}],"tiles":696},{"name":"Marble Shoppe","multi":146,"cost":318720,"storage":608,"lockdowns":338,"vendors":10,"file":"0092_Marble_Shoppe.png","w":13,"d":12,"floors":[{"z":5,"file":"0092_f1.png"},{"z":25,"file":"0092_f2.png"}],"tiles":519},{"name":"Plaster Home With Dirt Deck","multi":99,"cost":357120,"storage":622,"lockdowns":352,"vendors":10,"file":"0063_Plaster_Home_With_Dirt_Deck.png","w":11,"d":14,"floors":[{"z":5,"file":"0063_f1.png"},{"z":25,"file":"0063_f2.png"}],"tiles":521},{"name":"Two Story Brick Home","multi":80,"cost":360960,"storage":625,"lockdowns":355,"vendors":10,"file":"0050_Two_Story_Brick_Home.png","w":14,"d":17,"floors":[{"z":5,"file":"0050_f1.png"},{"z":25,"file":"0050_f2.png"}],"tiles":612},{"name":"Brick House With Steeple","multi":77,"cost":376320,"storage":654,"lockdowns":384,"vendors":11,"file":"004D_Brick_House_With_Steeple.png","w":13,"d":13,"floors":[{"z":5,"file":"004D_f1.png"},{"z":25,"file":"004D_f2.png"},{"z":45,"file":"004D_f3.png"},{"z":65,"file":"004D_f4.png"}],"tiles":576},{"name":"Fancy Wooden Stone House","multi":94,"cost":376320,"storage":653,"lockdowns":383,"vendors":11,"file":"005E_Fancy_Wooden_Stone_House.png","w":12,"d":16,"floors":[{"z":7,"file":"005E_f1.png"},{"z":27,"file":"005E_f2.png"},{"z":49,"file":"005E_f3.png"}],"tiles":781},{"name":"Two Story Wood And Plaster House","multi":118,"cost":403200,"storage":694,"lockdowns":424,"vendors":12,"file":"0076_Two_Story_Wood_And_Plaster_House.png","w":15,"d":15,"floors":[{"z":7,"file":"0076_f1.png"},{"z":27,"file":"0076_f2.png"}],"tiles":646},{"name":"Two Story Stone And Plaster House","multi":120,"cost":403200,"storage":694,"lockdowns":424,"vendors":12,"file":"0078_Two_Story_Stone_And_Plaster_House.png","w":15,"d":15,"floors":[{"z":7,"file":"0078_f1.png"},{"z":27,"file":"0078_f2.png"}],"tiles":643},{"name":"Marble House With Patio","multi":150,"cost":403200,"storage":700,"lockdowns":430,"vendors":13,"file":"0096_Marble_House_With_Patio.png","w":15,"d":15,"floors":[{"z":4,"file":"0096_f1.png"},{"z":24,"file":"0096_f2.png"},{"z":44,"file":"0096_f3.png"}],"tiles":639},{"name":"Two Story Sandstone House","multi":76,"cost":403200,"storage":725,"lockdowns":455,"vendors":14,"file":"004C_Two_Story_Sandstone_House.png","w":14,"d":10,"floors":[{"z":6,"file":"004C_f1.png"},{"z":26,"file":"004C_f2.png"},{"z":46,"file":"004C_f3.png"}],"tiles":631},{"name":"Small Tower Of Stone","multi":84,"cost":526080,"storage":731,"lockdowns":461,"vendors":14,"file":"0054_Small_Tower_Of_Stone.png","w":11,"d":13,"floors":[{"z":5,"file":"0054_f1.png"},{"z":25,"file":"0054_f2.png"},{"z":45,"file":"0054_f3.png"}],"tiles":685},{"name":"Small Brick Castle","multi":143,"cost":526080,"storage":743,"lockdowns":473,"vendors":14,"file":"008F_Small_Brick_Castle.png","w":14,"d":13,"floors":[{"z":5,"file":"008F_f1.png"},{"z":25,"file":"008F_f2.png"},{"z":45,"file":"008F_f3.png"}],"tiles":684},{"name":"Stone Fort","multi":139,"cost":545280,"storage":750,"lockdowns":480,"vendors":14,"file":"008B_Stone_Fort.png","w":17,"d":15,"floors":[{"z":7,"file":"008B_f1.png"},{"z":27,"file":"008B_f2.png"}],"tiles":757},{"name":"Castle Tower","multi":74,"cost":576000,"storage":839,"lockdowns":569,"vendors":17,"file":"004A_Castle_Tower.png","w":13,"d":14,"floors":[{"z":0,"file":"004A_f1.png"},{"z":27,"file":"004A_f2.png"},{"z":49,"file":"004A_f3.png"},{"z":71,"file":"004A_f4.png"}],"tiles":1065},{"name":"Raised Brick Home","multi":137,"cost":579840,"storage":866,"lockdowns":596,"vendors":18,"file":"0089_Raised_Brick_Home.png","w":13,"d":14,"floors":[{"z":5,"file":"0089_f1.png"},{"z":25,"file":"0089_f2.png"},{"z":45,"file":"0089_f3.png"}],"tiles":724},{"name":"Small Wizard Tower","multi":144,"cost":710400,"storage":869,"lockdowns":599,"vendors":18,"file":"0090_Small_Wizard_Tower.png","w":17,"d":13,"floors":[{"z":5,"file":"0090_f1.png"},{"z":25,"file":"0090_f2.png"},{"z":45,"file":"0090_f3.png"}],"tiles":711},{"name":"Wooden Mansion","multi":90,"cost":744960,"storage":920,"lockdowns":650,"vendors":20,"file":"005A_Wooden_Mansion.png","w":15,"d":14,"floors":[{"z":5,"file":"005A_f1.png"},{"z":25,"file":"005A_f2.png"},{"z":45,"file":"005A_f3.png"}],"tiles":948},{"name":"Three Story Stone Villa","multi":85,"cost":852480,"storage":965,"lockdowns":695,"vendors":22,"file":"0055_Three_Story_Stone_Villa.png","w":16,"d":14,"floors":[{"z":5,"file":"0055_f1.png"},{"z":25,"file":"0055_f2.png"},{"z":45,"file":"0055_f3.png"}],"tiles":972},{"name":"Tower","multi":122,"cost":921600,"storage":1476,"lockdowns":1206,"vendors":24,"file":"007A_Tower.png","w":24,"d":16,"floors":[{"z":6,"file":"007A_f1.png"},{"z":26,"file":"007A_f2.png"},{"z":46,"file":"007A_f3.png"},{"z":66,"file":"007A_f4.png"}],"tiles":1460},{"name":"Large Tent","multi":73,"cost":1075200,"storage":1572,"lockdowns":1302,"vendors":28,"file":"0049_Large_Tent.png","w":25,"d":26,"floors":[{"z":0,"file":"0049_f1.png"},{"z":25,"file":"0049_f2.png"}],"tiles":2110},{"name":"Small Stone Keep","multi":124,"cost":1536000,"storage":2847,"lockdowns":2577,"vendors":30,"file":"007C_Small_Stone_Keep.png","w":24,"d":24,"floors":[{"z":6,"file":"007C_f1.png"},{"z":26,"file":"007C_f2.png"},{"z":46,"file":"007C_f3.png"}],"tiles":2346},{"name":"Pyramid","multi":72,"cost":1612800,"storage":3856,"lockdowns":3586,"vendors":32,"file":"0048_Pyramid.png","w":32,"d":32,"floors":[{"z":0,"file":"0048_f1.png"},{"z":15,"file":"0048_f2.png"},{"z":30,"file":"0048_f3.png"},{"z":50,"file":"0048_f4.png"}],"tiles":4277},{"name":"Castle","multi":126,"cost":2304000,"storage":4777,"lockdowns":4507,"vendors":34,"file":"007E_Castle.png","w":31,"d":32,"floors":[{"z":6,"file":"007E_f1.png"},{"z":26,"file":"007E_f2.png"},{"z":46,"file":"007E_f3.png"}],"tiles":3452},{"name":"Fortress","multi":75,"cost":2995200,"storage":6448,"lockdowns":6178,"vendors":36,"file":"004B_Fortress.png","w":32,"d":33,"floors":[{"z":0,"file":"004B_f1.png"},{"z":27,"file":"004B_f2.png"},{"z":49,"file":"004B_f3.png"},{"z":71,"file":"004B_f4.png"}],"tiles":5799}];
+const gp = n => n.toLocaleString('en-US');
+let defaultView = 'full', sortKey = 'cost', query = '', view = [], cur = -1;
+const sel = {};            // multi id -> selected floor index (-1 = full)
+try { const s = localStorage.getItem('uoa-view'); if (s) defaultView = s; } catch (e) {}
+const grid = document.getElementById('grid');
+
+function floorIndex(h) {
+  if (h.multi in sel) return sel[h.multi];
+  return defaultView === 'full' ? -1 : defaultView === 'ground' ? 0 : h.floors.length - 1;
+}
+function src(h, f) { return f < 0 ? 'images/' + h.file : 'images_floors/' + h.floors[f].file; }
+function floorLabel(f) { return f < 0 ? 'Full' : String(f + 1); }
+
+function floorButtons(h, f, small, onPick) {
+  const seg = document.createElement('div');
+  seg.className = 'seg' + (small ? ' small' : ''); seg.setAttribute('role', 'group'); seg.setAttribute('aria-label', 'Floor');
+  for (let i = -1; i < h.floors.length; i++) {
+    const b = document.createElement('button'); b.type = 'button';
+    b.textContent = floorLabel(i); b.setAttribute('aria-pressed', String(i === f));
+    b.title = i < 0 ? 'Whole house' : 'Floor ' + (i + 1) + ' (z ' + h.floors[i].z + ')';
+    b.addEventListener('click', ev => { ev.stopPropagation(); onPick(i); });
+    seg.appendChild(b);
+  }
+  return seg;
+}
+
+function build() {
+  const q = query.trim().toLowerCase();
+  view = HOUSES.filter(h => !q || h.name.toLowerCase().includes(q));
+  view.sort((a, b) => sortKey === 'name' ? a.name.localeCompare(b.name)
+    : sortKey === 'floors' ? (a.floors.length - b.floors.length) || (a.cost - b.cost)
+    : (a[sortKey] - b[sortKey]) || (a.cost - b.cost));
+  grid.innerHTML = '';
+  view.forEach((h, i) => grid.appendChild(card(h, i)));
+  document.getElementById('count').textContent = view.length + ' of ' + HOUSES.length + ' houses';
+}
+
+function card(h, i) {
+  const c = document.createElement('div'); c.className = 'card';
+  const f = floorIndex(h);
+  const pic = document.createElement('button'); pic.className = 'pic'; pic.type = 'button';
+  pic.innerHTML = '<img loading="lazy" src="' + src(h, f) + '" alt="' + h.name + '">';
+  pic.addEventListener('click', () => open(i));
+  const row = document.createElement('div'); row.className = 'row';
+  const name = document.createElement('div'); name.className = 'name'; name.textContent = h.name;
+  row.appendChild(name);
+  row.appendChild(floorButtons(h, f, true, k => { sel[h.multi] = k; refreshCard(c, h); }));
+  c.appendChild(pic); c.appendChild(row);
+  c.insertAdjacentHTML('beforeend',
+    '<div class="cost">' + gp(h.cost) + ' gold</div>' +
+    '<div class="stats"><span>Storage <b>' + h.storage + '</b></span><span>Lockdowns <b>' + h.lockdowns + '</b></span>' +
+    '<span>Vendors <b>' + h.vendors + '</b></span><span>Footprint <b>' + h.w + ' x ' + h.d + '</b></span>' +
+    '<span>Floors <b>' + h.floors.length + '</b></span><span>Multi <b>0x' + h.multi.toString(16).toUpperCase() + '</b></span></div>');
+  return c;
+}
+function refreshCard(c, h) {
+  const f = floorIndex(h);
+  c.querySelector('.pic img').src = src(h, f);
+  c.querySelectorAll('.seg button').forEach((b, k) => b.setAttribute('aria-pressed', String(k - 1 === f)));
+}
+
+function setDefault(v) {
+  defaultView = v; for (const k in sel) delete sel[k];
+  try { localStorage.setItem('uoa-view', v); } catch (e) {}
+  document.querySelectorAll('.bar [data-view]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.view === v)));
+  build(); if (cur >= 0) show();
+}
+document.querySelectorAll('.bar [data-view]').forEach(b => b.addEventListener('click', () => setDefault(b.dataset.view)));
+document.getElementById('sort').addEventListener('change', e => { sortKey = e.target.value; build(); });
+document.getElementById('q').addEventListener('input', e => { query = e.target.value; build(); });
+
+const lb = document.getElementById('lb');
+function show() {
+  const h = view[cur], f = floorIndex(h);
+  document.getElementById('lb-name').textContent = h.name;
+  document.getElementById('lb-meta').textContent = gp(h.cost) + ' gold · storage ' + h.storage + ' · lockdowns ' + h.lockdowns +
+    ' · vendors ' + h.vendors + ' · footprint ' + h.w + ' x ' + h.d + ' · ' + h.floors.length + (h.floors.length === 1 ? ' floor' : ' floors');
+  const img = document.getElementById('lb-pic'); img.src = src(h, f); img.alt = h.name + (f < 0 ? '' : ', floor ' + (f + 1));
+  const holder = document.getElementById('lb-floors'); holder.replaceWith(floorButtons(h, f, false, k => {
+    sel[h.multi] = k; show();
+    const c = grid.children[cur]; if (c) refreshCard(c, h);
+  }));
+  document.querySelector('.lb-top .seg').id = 'lb-floors';
+}
+function open(i) { cur = i; show(); lb.hidden = false; document.getElementById('lb-close').focus(); }
+function close() { lb.hidden = true; cur = -1; }
+document.getElementById('lb-close').addEventListener('click', close);
+document.getElementById('lb-prev').addEventListener('click', () => { cur = (cur - 1 + view.length) % view.length; show(); });
+document.getElementById('lb-next').addEventListener('click', () => { cur = (cur + 1) % view.length; show(); });
+lb.addEventListener('click', e => { if (e.target === lb || e.target.classList.contains('lb-img')) close(); });
+document.addEventListener('keydown', e => {
+  if (lb.hidden) return;
+  if (e.key === 'Escape') close();
+  if (e.key === 'ArrowLeft') document.getElementById('lb-prev').click();
+  if (e.key === 'ArrowRight') document.getElementById('lb-next').click();
+  if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+    const h = view[cur]; let f = floorIndex(h) + (e.key === 'ArrowUp' ? 1 : -1);
+    if (f >= h.floors.length) f = -1; if (f < -1) f = h.floors.length - 1;
+    sel[h.multi] = f; show(); const c = grid.children[cur]; if (c) refreshCard(c, h); e.preventDefault();
+  }
+});
+setDefault(defaultView);
+</script>
+
+</body></html>
