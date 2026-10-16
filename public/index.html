@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Ultima Online Housing & Art Studio</title>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Source+Sans+3:wght@400;600;700&display=swap">
-  <link rel="stylesheet" href="/app.css?v=6">
+  <link rel="stylesheet" href="/app.css?v=7">
 </head>
 <body>
 
@@ -26,7 +26,7 @@
         🏛️ Server Housing Menu <span class="tab-badge" id="tab-server-count">68</span>
       </button>
       <button class="tab-btn" data-tab="library" type="button" role="tab">
-        🌐 House Design Library <span class="tab-badge" id="tab-library-count">8</span>
+        🌐 House Design Library <span class="tab-badge" id="tab-library-count">204</span>
       </button>
       <button class="tab-btn" data-tab="compare" type="button" role="tab">
         ⚖️ Art & Client Comparison
@@ -70,6 +70,7 @@
       </label>
 
       <span class="count" id="count"></span>
+      <button class="btn btn-sm btn-accent" id="btn-open-import" type="button" onclick="openUoaImportModal()">📥 Import UO Architect / Text</button>
       <button class="btn btn-sm btn-primary" id="btn-export-cs" type="button" onclick="exportServerCsScript()">📜 Export C#</button>
     </div>
   </div>
@@ -400,8 +401,188 @@
         <p style="color:var(--muted);margin-top:0;font-size:13px">All unique tiles used in the construction of this house multi (including doors and house sign). Click any tile to inspect its sprite and <code>tiledata.mul</code> attributes.</p>
         <div class="tile-picker-grid" id="inspector-tiles-grid" style="max-height:450px"></div>
       </div>
-      <div class="modal-footer">
+      <div class="modal-footer" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <button class="btn btn-sm" type="button" onclick="exportCurrentInspectorDesign('uoa')" title="Download as UO Architect (.uoa) binary file">💾 Export .UOA</button>
+          <button class="btn btn-sm" type="button" onclick="exportCurrentInspectorDesign('txt')" title="Download as UO Multi Text ([extract .txt) file">📄 Export Multi .TXT</button>
+        </div>
         <button class="btn" type="button" onclick="closeTileInspectorModal()">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: UO ARCHITECT & RAW TEXT IMPORT WORKBENCH -->
+  <div class="modal-backdrop" id="modal-uoa-import" hidden>
+    <div class="modal-box modal-xl">
+      <div class="modal-header">
+        <h2>📥 Import UO Architect Designs & Raw In-Game Text Schematics</h2>
+        <button class="btn btn-sm" type="button" onclick="closeUoaImportModal()">✕</button>
+      </div>
+      <div class="modal-body uoa-import-body">
+        <!-- Mode Selector Tabs -->
+        <div class="seg uoa-mode-tabs" role="group" aria-label="Import Source Mode">
+          <button type="button" id="uoa-tab-folder" aria-pressed="true" onclick="switchUoaImportMode('folder')">🗂️ Scan UO Architect Folder</button>
+          <button type="button" id="uoa-tab-upload" aria-pressed="false" onclick="switchUoaImportMode('upload')">📂 Upload Files (.uoa / .txt / Designs.idx)</button>
+          <button type="button" id="uoa-tab-paste" aria-pressed="false" onclick="switchUoaImportMode('paste')">📋 Paste In-Game Command / Raw Text</button>
+        </div>
+
+        <!-- MODE 1: SCAN LOCAL FOLDER -->
+        <div id="uoa-panel-folder" class="uoa-source-panel">
+          <div style="display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;">
+            <div class="form-group" style="flex:1;min-width:280px;margin-bottom:0;">
+              <label>UO Architect Save / Schematics Directory Path</label>
+              <input type="text" id="uoa-scan-dir-input" style="width:100%" value="E:\Projects\ultima-schematics\uoar\Client\Save" placeholder="e.g. E:\Projects\ultima-schematics\uoar\Client\Save">
+            </div>
+            <button class="btn btn-primary" id="btn-uoa-scan-dir" type="button" onclick="scanUoaDirectory()">
+              🔍 Scan Folder for Designs
+            </button>
+          </div>
+          <small style="display:block;color:var(--muted);margin-top:6px;">
+            Automatically discovers single &amp; batch <code>.uoa</code> files (v1 &amp; v2), <code>Designs.idx</code> + <code>Designs.bin</code> databases, and exported <code>.txt</code> / <code>.wsc</code> / <code>.csv</code> / <code>.xml</code> multi files in all subfolders.
+          </small>
+        </div>
+
+        <!-- MODE 2: UPLOAD FILES -->
+        <div id="uoa-panel-upload" class="uoa-source-panel" hidden>
+          <div class="uoa-dropzone" id="uoa-dropzone" onclick="document.getElementById('uoa-file-input').click()">
+            <input type="file" id="uoa-file-input" multiple accept=".uoa,.txt,.wsc,.csv,.xml,.cs,.idx,.bin" hidden onchange="handleUoaFileSelect(this.files)">
+            <div style="font-size:26px;margin-bottom:6px;">📦</div>
+            <div style="font-weight:700;font-size:15px;">Drop UO Architect or Multi Text files here, or click to browse</div>
+            <div style="color:var(--muted);font-size:12px;margin-top:4px;">
+              Supports <code>.uoa</code> (v1 &amp; v2 batch), <code>Designs.idx</code> + <code>Designs.bin</code> (select both together), <code>[extract .txt</code>, <code>.wsc</code>, <code>.csv</code>, <code>.xml</code>, and RunUO/ServUO <code>.cs</code> addon/multi scripts.
+            </div>
+          </div>
+        </div>
+
+        <!-- MODE 3: PASTE RAW TEXT -->
+        <div id="uoa-panel-paste" class="uoa-source-panel" hidden>
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:8px;">
+            <div class="form-group" style="margin-bottom:0;">
+              <label>Schematic Name</label>
+              <input type="text" id="uoa-paste-name" style="width:100%" placeholder="e.g. Custom Guard Watchtower">
+            </div>
+            <div class="form-group" style="margin-bottom:0;">
+              <label>Category</label>
+              <input type="text" id="uoa-paste-category" list="library-categories-list" style="width:100%" placeholder="Auto-detect or choose...">
+            </div>
+            <div class="form-group" style="margin-bottom:0;">
+              <label>Author / Credits</label>
+              <input type="text" id="uoa-paste-author" style="width:100%" placeholder="e.g. In-Game Extract">
+            </div>
+          </div>
+          <div class="form-group" style="margin-bottom:8px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+              <label style="margin:0;">Raw Multi Text / In-Game Command Output</label>
+              <button class="btn btn-sm" type="button" onclick="loadSampleRawMultiText()">🧪 Load Sample [extract Output</button>
+            </div>
+            <textarea id="uoa-paste-textarea" rows="6" style="width:100%;font-family:Consolas,monospace;font-size:12px;background:var(--bg);color:var(--fg);border:1px solid var(--line);border-radius:4px;padding:8px;" placeholder="Paste output from [extract (.txt), raw '<ItemID> <X> <Y> <Z> [Flags]' lines, WorldForge .wsc blocks, XML <tile> tags, or C# mcl.Add / AddComponent lines..."></textarea>
+          </div>
+          <div style="display:flex;justify-content:flex-end;">
+            <button class="btn btn-primary" type="button" onclick="parsePastedUoaText()">⚡ Parse &amp; Preview Raw Text</button>
+          </div>
+        </div>
+
+        <!-- DISCOVERED DESIGNS WORKBENCH (SHOWN WHEN DESIGNS PARSED) -->
+        <div id="uoa-results-workbench" hidden>
+          <div class="uoa-filter-bar">
+            <input type="search" id="uoa-filter-q" placeholder="Filter parsed designs by name, category, author, file..." oninput="renderUoaParsedList()">
+            <select id="uoa-filter-cat" onchange="renderUoaParsedList()">
+              <option value="all">All Categories</option>
+            </select>
+            <select id="uoa-filter-compat" onchange="renderUoaParsedList()">
+              <option value="all">All Compatibility</option>
+              <option value="compatible">✓ Compatible Only</option>
+              <option value="missing">⚠️ Missing Tiles Only</option>
+              <option value="new">🆕 Not Yet in Library</option>
+            </select>
+            <div style="display:flex;gap:6px;margin-left:auto;">
+              <button class="btn btn-sm" type="button" onclick="setUoaSelection('all')">Select Filtered</button>
+              <button class="btn btn-sm" type="button" onclick="setUoaSelection('new')">Select New</button>
+              <button class="btn btn-sm" type="button" onclick="setUoaSelection('none')">Select None</button>
+            </div>
+          </div>
+
+          <div class="uoa-workbench-split">
+            <!-- Left: Table of parsed designs -->
+            <div class="uoa-list-pane">
+              <table class="comp-table uoa-table">
+                <thead>
+                  <tr>
+                    <th style="width:34px"><input type="checkbox" id="uoa-check-all-header" onchange="setUoaSelection(this.checked ? 'all' : 'none')"></th>
+                    <th>Design Name</th>
+                    <th>Category</th>
+                    <th>Size</th>
+                    <th>Tiles</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody id="uoa-parsed-tbody"></tbody>
+              </table>
+            </div>
+
+            <!-- Right: Live Isometric Preview & Metadata Editor -->
+            <div class="uoa-preview-pane" id="uoa-preview-pane">
+              <div class="uoa-preview-box">
+                <div class="uoa-preview-header">
+                  <span id="uoa-prev-badge" class="status-pill">Select a design</span>
+                  <div class="seg small" id="uoa-prev-floors"></div>
+                </div>
+                <div class="uoa-preview-img-wrap">
+                  <img id="uoa-prev-img" alt="Isometric Preview" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7">
+                </div>
+              </div>
+
+              <div class="uoa-meta-editor" id="uoa-meta-editor" hidden>
+                <div class="form-group">
+                  <label>Design Name</label>
+                  <input type="text" id="uoa-edit-item-name" style="width:100%" oninput="updateSelectedUoaItemField('name', this.value)">
+                </div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+                  <div class="form-group">
+                    <label>Studio Category</label>
+                    <input type="text" id="uoa-edit-item-cat" list="library-categories-list" style="width:100%" oninput="updateSelectedUoaItemField('category', this.value)">
+                  </div>
+                  <div class="form-group">
+                    <label>Author / Credits</label>
+                    <input type="text" id="uoa-edit-item-author" style="width:100%" oninput="updateSelectedUoaItemField('author', this.value)">
+                  </div>
+                  <div class="form-group" style="margin-bottom:0">
+                    <label>Gold Cost</label>
+                    <input type="number" id="uoa-edit-item-cost" style="width:100%" oninput="updateSelectedUoaItemField('cost', Number(this.value))">
+                  </div>
+                  <div class="form-group" style="margin-bottom:0">
+                    <label>Storage / Lockdowns</label>
+                    <div style="display:flex;gap:4px;">
+                      <input type="number" id="uoa-edit-item-storage" style="width:50%" title="Storage" oninput="updateSelectedUoaItemField('storage', Number(this.value))">
+                      <input type="number" id="uoa-edit-item-lockdowns" style="width:50%" title="Lockdowns" oninput="updateSelectedUoaItemField('lockdowns', Number(this.value))">
+                    </div>
+                  </div>
+                </div>
+                <small id="uoa-prev-source-info" style="display:block;color:var(--muted);margin-top:8px;font-size:11.5px;"></small>
+              </div>
+            </div>
+          </div>
+
+          <div class="uoa-options-bar">
+            <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;">
+              <input type="checkbox" id="uoa-opt-skip-existing" checked>
+              <span>Skip designs already in House Design Library</span>
+            </label>
+            <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;">
+              <input type="checkbox" id="uoa-opt-add-server">
+              <span>Also add imported designs directly to Server Housing Menu</span>
+            </label>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer" style="display:flex;justify-content:space-between;align-items:center;">
+        <span id="uoa-import-summary-status" style="font-size:13px;color:var(--muted);font-weight:600;">Ready to scan or parse schematics.</span>
+        <div style="display:flex;gap:8px;">
+          <button class="btn" type="button" onclick="closeUoaImportModal()">Close</button>
+          <button class="btn btn-primary" id="btn-uoa-commit-import" type="button" onclick="commitUoaImport()" disabled>
+            📥 Import Selected to Library
+          </button>
+        </div>
       </div>
     </div>
   </div>
@@ -502,6 +683,6 @@
     </div>
   </div>
 
-  <script src="/app.js?v=6"></script>
+  <script src="/app.js?v=7"></script>
 </body>
 </html>

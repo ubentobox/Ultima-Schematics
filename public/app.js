@@ -1203,7 +1203,12 @@ async function saveHouseChanges() {
 // ------------------------------------------------------------------
 // Tile Inspector Modal & Single Tile Details Modal
 // ------------------------------------------------------------------
+let currentInspectorHouse = null;
+let currentInspectorIsLibrary = false;
+
 async function openTileInspectorModal(h, isLibrary = false) {
+  currentInspectorHouse = h;
+  currentInspectorIsLibrary = isLibrary;
   const modal = document.getElementById('modal-tile-inspector');
   if (!modal) return;
 
@@ -1799,5 +1804,521 @@ function copyExportCsToClipboard() {
     });
   }
 }
+
+// ------------------------------------------------------------------
+// Export Individual Design (.uoa / Multi .txt)
+// ------------------------------------------------------------------
+function exportCurrentInspectorDesign(format = 'uoa') {
+  if (!currentInspectorHouse) return;
+  const targetKey = (currentInspectorIsLibrary && currentInspectorHouse.id)
+    ? currentInspectorHouse.id
+    : (currentInspectorHouse.multi !== undefined ? String(currentInspectorHouse.multi) : currentInspectorHouse.id);
+  if (!targetKey) {
+    showToast('Unable to determine design ID for export.', 'error');
+    return;
+  }
+  const url = `/api/export/${format === 'txt' ? 'txt' : 'uoa'}/${encodeURIComponent(targetKey)}`;
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = '';
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  showToast(`Exporting "${currentInspectorHouse.name}" as .${format.toUpperCase()}...`, 'info');
+}
+
+// ------------------------------------------------------------------
+// UO Architect & Raw Text Import Workbench
+// ------------------------------------------------------------------
+let uoaImportMode = 'folder';
+let uoaParsedDesigns = [];
+let uoaSelectedTempIds = new Set();
+let uoaActivePreviewTempId = null;
+let uoaActivePreviewFloor = -1;
+
+function openUoaImportModal(mode = 'folder') {
+  const modal = document.getElementById('modal-uoa-import');
+  if (!modal) return;
+  modal.hidden = false;
+  modal.style.display = 'flex';
+  switchUoaImportMode(mode);
+  setupUoaDropzone();
+}
+
+function closeUoaImportModal() {
+  const modal = document.getElementById('modal-uoa-import');
+  if (modal) {
+    modal.hidden = true;
+    modal.style.display = 'none';
+  }
+}
+
+function switchUoaImportMode(mode) {
+  uoaImportMode = mode;
+  const modes = ['folder', 'upload', 'paste'];
+  modes.forEach(m => {
+    const tab = document.getElementById(`uoa-tab-${m}`);
+    const panel = document.getElementById(`uoa-panel-${m}`);
+    if (tab) tab.setAttribute('aria-pressed', String(m === mode));
+    if (panel) panel.hidden = (m !== mode);
+  });
+}
+
+let uoaDropzoneInitialized = false;
+function setupUoaDropzone() {
+  if (uoaDropzoneInitialized) return;
+  const dz = document.getElementById('uoa-dropzone');
+  if (!dz) return;
+  uoaDropzoneInitialized = true;
+
+  dz.addEventListener('dragover', e => {
+    e.preventDefault();
+    dz.classList.add('dragover');
+  });
+  dz.addEventListener('dragleave', () => {
+    dz.classList.remove('dragover');
+  });
+  dz.addEventListener('drop', e => {
+    e.preventDefault();
+    dz.classList.remove('dragover');
+    if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      handleUoaFileSelect(e.dataTransfer.files);
+    }
+  });
+}
+
+function readFileAsBase64(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const result = String(reader.result || '');
+      const base64 = result.includes(',') ? result.split(',')[1] : result;
+      resolve(base64);
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+async function handleUoaFileSelect(fileList) {
+  if (!fileList || fileList.length === 0) return;
+  const statusEl = document.getElementById('uoa-import-summary-status');
+  if (statusEl) statusEl.textContent = `⏳ Reading and parsing ${fileList.length} file(s)...`;
+
+  try {
+    const filesPayload = [];
+    for (let i = 0; i < fileList.length; i++) {
+      const f = fileList[i];
+      const contentBase64 = await readFileAsBase64(f);
+      filesPayload.push({
+        name: f.name,
+        contentBase64
+      });
+    }
+
+    const res = await fetch('/api/import/parse', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ files: filesPayload })
+    });
+    const data = await res.json();
+    if (data.designs && data.designs.length > 0) {
+      populateUoaWorkbench(data.designs, data.errors || []);
+      showToast(`Parsed ${data.designs.length} design(s) from ${fileList.length} uploaded file(s)!`, 'success');
+    } else {
+      const errMsg = (data.errors && data.errors[0]?.error) || data.error || 'No valid designs found in selected files.';
+      showToast(errMsg, 'error');
+      if (statusEl) statusEl.textContent = `❌ ${errMsg}`;
+    }
+  } catch (err) {
+    showToast(`Error parsing files: ${err.message}`, 'error');
+    if (statusEl) statusEl.textContent = `❌ Error: ${err.message}`;
+  }
+}
+
+function loadSampleRawMultiText() {
+  const nameInput = document.getElementById('uoa-paste-name');
+  const catInput = document.getElementById('uoa-paste-category');
+  const authorInput = document.getElementById('uoa-paste-author');
+  const textarea = document.getElementById('uoa-paste-textarea');
+
+  if (nameInput && !nameInput.value) nameInput.value = 'Guard Watchtower Outpost';
+  if (catInput && !catInput.value) catInput.value = 'Towers';
+  if (authorInput && !authorInput.value) authorInput.value = 'In-Game [extract';
+  if (textarea) {
+    textarea.value = [
+      '6 version',
+      '1 template id',
+      '-1 item version',
+      '29 num components',
+      '57 -2 -2 0 1',
+      '56 -1 -2 0 1',
+      '56 0 -2 0 1',
+      '56 1 -2 0 1',
+      '55 -2 -1 0 1',
+      '55 -2 0 0 1',
+      '55 -2 1 0 1',
+      '54 2 -2 0 1',
+      '55 2 -1 0 1',
+      '55 2 0 0 1',
+      '55 2 1 0 1',
+      '56 -2 2 0 1',
+      '56 -1 2 0 1',
+      '56 1 2 0 1',
+      '53 2 2 0 1',
+      '1301 -1 -1 0 1',
+      '1301 0 -1 0 1',
+      '1301 1 -1 0 1',
+      '1301 -1 0 0 1',
+      '1301 0 0 0 1',
+      '1301 1 0 0 1',
+      '1301 -1 1 0 1',
+      '1301 0 1 0 1',
+      '1301 1 1 0 1',
+      '1661 0 2 0 0',
+      '60 -2 -2 20 1',
+      '60 -1 -2 20 1',
+      '60 0 -2 20 1',
+      '60 1 -2 20 1'
+    ].join('\n');
+  }
+}
+
+async function parsePastedUoaText() {
+  const rawText = document.getElementById('uoa-paste-textarea')?.value || '';
+  const rawTextName = document.getElementById('uoa-paste-name')?.value.trim() || 'In-Game Extracted Schematic';
+  const defaultCategory = document.getElementById('uoa-paste-category')?.value.trim() || '';
+  const defaultAuthor = document.getElementById('uoa-paste-author')?.value.trim() || '';
+
+  if (!rawText.trim()) {
+    showToast('Please paste raw multi text, [extract output, .wsc, XML, or C# lines first.', 'warning');
+    return;
+  }
+
+  const statusEl = document.getElementById('uoa-import-summary-status');
+  if (statusEl) statusEl.textContent = '⏳ Parsing raw text schematic...';
+
+  try {
+    const res = await fetch('/api/import/parse', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        rawText,
+        rawTextName,
+        defaultCategory,
+        defaultAuthor
+      })
+    });
+    const data = await res.json();
+    if (data.designs && data.designs.length > 0) {
+      populateUoaWorkbench(data.designs, data.errors || []);
+      showToast(`Parsed "${data.designs[0].name}" (${gp(data.designs[0].tiles)} tiles)!`, 'success');
+    } else {
+      const errMsg = (data.errors && data.errors[0]?.error) || data.error || 'Could not parse any valid tile components from text.';
+      showToast(errMsg, 'error');
+      if (statusEl) statusEl.textContent = `❌ ${errMsg}`;
+    }
+  } catch (err) {
+    showToast(`Error parsing text: ${err.message}`, 'error');
+  }
+}
+
+async function scanUoaDirectory() {
+  const dirInput = document.getElementById('uoa-scan-dir-input');
+  const dirPath = dirInput ? dirInput.value.trim() : '';
+  const btn = document.getElementById('btn-uoa-scan-dir');
+  const statusEl = document.getElementById('uoa-import-summary-status');
+
+  if (btn) {
+    btn.disabled = true;
+    btn.textContent = '⏳ Scanning...';
+  }
+  if (statusEl) statusEl.textContent = `⏳ Scanning ${dirPath || 'UO Architect Save folder'}...`;
+
+  try {
+    const res = await fetch('/api/import/scan-dir', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ dirPath, deduplicate: true })
+    });
+    const data = await res.json();
+    if (data.success && data.designs) {
+      populateUoaWorkbench(data.designs, data.errors || []);
+      showToast(`Discovered ${data.designs.length} unique designs in ${data.dirPath}!`, 'success');
+    } else {
+      showToast(data.error || 'Failed to scan directory.', 'error');
+      if (statusEl) statusEl.textContent = `❌ ${data.error || 'Failed to scan directory.'}`;
+    }
+  } catch (err) {
+    showToast(`Scan error: ${err.message}`, 'error');
+    if (statusEl) statusEl.textContent = `❌ Error: ${err.message}`;
+  } finally {
+    if (btn) {
+      btn.disabled = false;
+      btn.textContent = '🔍 Scan Folder for Designs';
+    }
+  }
+}
+
+function populateUoaWorkbench(designs, errors = []) {
+  uoaParsedDesigns = designs || [];
+  uoaSelectedTempIds.clear();
+
+  // Select all designs not yet in library by default (or all if all are already in library)
+  const newOnes = uoaParsedDesigns.filter(d => !d.alreadyInLibrary);
+  const defaultTargets = newOnes.length > 0 ? newOnes : uoaParsedDesigns;
+  defaultTargets.forEach(d => uoaSelectedTempIds.add(d.tempId));
+
+  // Populate category filter dropdown
+  const catSelect = document.getElementById('uoa-filter-cat');
+  if (catSelect) {
+    const cats = Array.from(new Set(uoaParsedDesigns.map(d => d.category || 'Custom Housing'))).sort();
+    catSelect.innerHTML = `<option value="all">All Categories (${uoaParsedDesigns.length})</option>`;
+    cats.forEach(c => {
+      const cnt = uoaParsedDesigns.filter(d => (d.category || 'Custom Housing') === c).length;
+      const opt = document.createElement('option');
+      opt.value = c;
+      opt.textContent = `${c} (${cnt})`;
+      catSelect.appendChild(opt);
+    });
+  }
+
+  const workbench = document.getElementById('uoa-results-workbench');
+  if (workbench) workbench.hidden = false;
+
+  renderUoaParsedList();
+
+  if (uoaParsedDesigns.length > 0) {
+    selectUoaItemForPreview(uoaParsedDesigns[0].tempId, -1);
+  }
+}
+
+function getFilteredUoaDesigns() {
+  const q = (document.getElementById('uoa-filter-q')?.value || '').trim().toLowerCase();
+  const cat = document.getElementById('uoa-filter-cat')?.value || 'all';
+  const compat = document.getElementById('uoa-filter-compat')?.value || 'all';
+
+  return uoaParsedDesigns.filter(d => {
+    if (cat !== 'all' && (d.category || 'Custom Housing') !== cat) return false;
+    if (compat === 'compatible' && !d.isCompatible) return false;
+    if (compat === 'missing' && d.isCompatible) return false;
+    if (compat === 'new' && d.alreadyInLibrary) return false;
+    if (!q) return true;
+    return (
+      (d.name && d.name.toLowerCase().includes(q)) ||
+      (d.category && d.category.toLowerCase().includes(q)) ||
+      (d.author && d.author.toLowerCase().includes(q)) ||
+      (d.sourceFile && d.sourceFile.toLowerCase().includes(q))
+    );
+  });
+}
+
+function renderUoaParsedList() {
+  const tbody = document.getElementById('uoa-parsed-tbody');
+  if (!tbody) return;
+  const filtered = getFilteredUoaDesigns();
+  tbody.innerHTML = '';
+
+  if (filtered.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:18px;color:var(--muted)">No parsed designs match your filter.</td></tr>`;
+    updateUoaSummaryFooter();
+    return;
+  }
+
+  filtered.forEach(d => {
+    const tr = document.createElement('tr');
+    tr.dataset.tempId = d.tempId;
+    if (d.tempId === uoaActivePreviewTempId) tr.classList.add('selected-row');
+
+    const checked = uoaSelectedTempIds.has(d.tempId) ? 'checked' : '';
+    let statusBadge = d.isCompatible
+      ? `<span class="status-pill status-ok" style="margin:0">✓ Ready</span>`
+      : `<span class="status-pill status-err" style="margin:0" title="${d.missingTileCount} missing tile IDs">⚠️ ${d.missingTileCount} Missing</span>`;
+
+    if (d.alreadyInLibrary) {
+      statusBadge += ` <span class="status-pill" style="margin:0;background:var(--thumb);color:var(--muted)">In Library</span>`;
+    }
+
+    tr.innerHTML = `
+      <td><input type="checkbox" class="uoa-row-check" data-temp-id="${escapeHtml(d.tempId)}" ${checked}></td>
+      <td>
+        <div style="font-weight:700">${escapeHtml(d.name)}</div>
+        <small style="color:var(--muted)">by ${escapeHtml(d.author || 'Unknown')} · ${escapeHtml(d.sourceFile || d.sourceFormat)}</small>
+      </td>
+      <td><span class="lib-category-pill" style="pointer-events:none">${escapeHtml(d.category)}</span></td>
+      <td>${d.w}×${d.d}<br><small style="color:var(--muted)">${d.floors?.length || 1} fl</small></td>
+      <td><b>${gp(d.tiles)}</b></td>
+      <td>${statusBadge}</td>
+    `;
+
+    const checkbox = tr.querySelector('.uoa-row-check');
+    checkbox.addEventListener('click', e => {
+      e.stopPropagation();
+      if (checkbox.checked) uoaSelectedTempIds.add(d.tempId);
+      else uoaSelectedTempIds.delete(d.tempId);
+      updateUoaSummaryFooter();
+    });
+
+    tr.addEventListener('click', () => {
+      selectUoaItemForPreview(d.tempId, -1);
+    });
+
+    tbody.appendChild(tr);
+  });
+
+  updateUoaSummaryFooter();
+}
+
+function selectUoaItemForPreview(tempId, floorIdx = -1) {
+  uoaActivePreviewTempId = tempId;
+  uoaActivePreviewFloor = floorIdx;
+  const item = uoaParsedDesigns.find(d => d.tempId === tempId);
+  if (!item) return;
+
+  // Highlight selected row
+  document.querySelectorAll('#uoa-parsed-tbody tr').forEach(tr => {
+    tr.classList.toggle('selected-row', tr.dataset.tempId === tempId);
+  });
+
+  // Update badge & floor buttons
+  const badge = document.getElementById('uoa-prev-badge');
+  if (badge) {
+    badge.className = `status-pill ${item.isCompatible ? 'status-ok' : 'status-err'}`;
+    badge.textContent = item.isCompatible
+      ? `✓ Compatible (${gp(item.tiles)} tiles)`
+      : `⚠️ ${item.missingTileCount} Missing Custom Tiles`;
+  }
+
+  const floorsHolder = document.getElementById('uoa-prev-floors');
+  if (floorsHolder) {
+    const newSeg = createFloorButtons(item, floorIdx, true, k => {
+      selectUoaItemForPreview(tempId, k);
+    });
+    newSeg.id = 'uoa-prev-floors';
+    floorsHolder.replaceWith(newSeg);
+  }
+
+  // Update preview image
+  const img = document.getElementById('uoa-prev-img');
+  if (img) {
+    let maxZParam = '';
+    if (floorIdx >= 0 && item.floors && item.floors[floorIdx]) {
+      maxZParam = `?maxZ=${(item.floors[floorIdx].z ?? 0) + 15}`;
+    }
+    img.src = `/api/import/preview/${encodeURIComponent(tempId)}${maxZParam}`;
+  }
+
+  // Populate metadata editor
+  const editor = document.getElementById('uoa-meta-editor');
+  if (editor) {
+    editor.hidden = false;
+    document.getElementById('uoa-edit-item-name').value = item.name || '';
+    document.getElementById('uoa-edit-item-cat').value = item.category || '';
+    document.getElementById('uoa-edit-item-author').value = item.author || '';
+    document.getElementById('uoa-edit-item-cost').value = item.cost || 50000;
+    document.getElementById('uoa-edit-item-storage').value = item.storage || 500;
+    document.getElementById('uoa-edit-item-lockdowns').value = item.lockdowns || 230;
+    const srcInfo = document.getElementById('uoa-prev-source-info');
+    if (srcInfo) {
+      const origMeta = [item.rawCategory, item.rawSubsection].filter(Boolean).join(' / ');
+      srcInfo.textContent = `Source: ${item.sourceFormat}${item.sourceFile ? ` (${item.sourceFile})` : ''}${origMeta ? ` · Original UOA Tag: ${origMeta}` : ''}`;
+    }
+  }
+}
+
+function updateSelectedUoaItemField(field, value) {
+  if (!uoaActivePreviewTempId) return;
+  const item = uoaParsedDesigns.find(d => d.tempId === uoaActivePreviewTempId);
+  if (!item) return;
+  item[field] = value;
+  renderUoaParsedList();
+}
+
+function setUoaSelection(mode) {
+  const filtered = getFilteredUoaDesigns();
+  if (mode === 'none') {
+    filtered.forEach(d => uoaSelectedTempIds.delete(d.tempId));
+  } else if (mode === 'new') {
+    uoaSelectedTempIds.clear();
+    filtered.filter(d => !d.alreadyInLibrary).forEach(d => uoaSelectedTempIds.add(d.tempId));
+  } else {
+    filtered.forEach(d => uoaSelectedTempIds.add(d.tempId));
+  }
+  renderUoaParsedList();
+}
+
+function updateUoaSummaryFooter() {
+  const statusEl = document.getElementById('uoa-import-summary-status');
+  const commitBtn = document.getElementById('btn-uoa-commit-import');
+  const selCount = uoaSelectedTempIds.size;
+
+  if (statusEl) {
+    statusEl.textContent = uoaParsedDesigns.length > 0
+      ? `Selected ${selCount} of ${uoaParsedDesigns.length} discovered design(s) for import.`
+      : 'Ready to scan or parse schematics.';
+  }
+  if (commitBtn) {
+    commitBtn.disabled = (selCount === 0);
+    commitBtn.textContent = selCount > 0
+      ? `📥 Import ${selCount} Selected Design${selCount === 1 ? '' : 's'} to Library`
+      : '📥 Import Selected to Library';
+  }
+}
+
+async function commitUoaImport() {
+  const selectedItems = uoaParsedDesigns.filter(d => uoaSelectedTempIds.has(d.tempId));
+  if (selectedItems.length === 0) return;
+
+  const skipExisting = document.getElementById('uoa-opt-skip-existing')?.checked ?? true;
+  const addToServer = document.getElementById('uoa-opt-add-server')?.checked ?? false;
+  const commitBtn = document.getElementById('btn-uoa-commit-import');
+  if (commitBtn) {
+    commitBtn.disabled = true;
+    commitBtn.textContent = `⏳ Importing ${selectedItems.length} Design(s)...`;
+  }
+
+  try {
+    const res = await fetch('/api/import/commit', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        items: selectedItems.map(d => ({
+          tempId: d.tempId,
+          name: d.name,
+          category: d.category,
+          author: d.author,
+          description: d.description,
+          cost: d.cost,
+          storage: d.storage,
+          lockdowns: d.lockdowns,
+          vendors: d.vendors,
+          w: d.w,
+          d: d.d
+        })),
+        skipExisting,
+        addToServer
+      })
+    });
+    const data = await res.json();
+    if (data.success) {
+      showToast(
+        `Imported ${data.importedCount} design(s) into the House Design Library!${data.skippedCount > 0 ? ` (${data.skippedCount} duplicate(s) skipped)` : ''}`,
+        'success',
+        5500
+      );
+      closeUoaImportModal();
+      await loadLibrary();
+      if (addToServer) await loadServerHouses();
+      switchTab('library');
+    } else {
+      showToast(`Import error: ${data.error || 'Failed'}`, 'error');
+    }
+  } catch (err) {
+    showToast(`Import error: ${err.message}`, 'error');
+  } finally {
+    updateUoaSummaryFooter();
+  }
+}
+
 
 

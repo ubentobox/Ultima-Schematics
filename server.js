@@ -7,7 +7,6 @@
 const http = require('http');
 const fs = require('fs');
 const path = require('path');
-const url = require('url');
 const zlib = require('zlib');
 const crypto = require('crypto');
 
@@ -617,42 +616,182 @@ function renderMultiComponents(components, maxZ = Infinity) {
   const pad = 12;
   const W = (maxPx - minPx) + pad * 2;
   const H = (maxPy - minPy) + pad * 2;
-  if (W <= 0 || H <= 0 || W > 4096 || H > 4096) return null;
+  if (W <= 0 || H <= 0 || W > 16384 || H > 16384) return null;
 
   const ox = pad - minPx;
   const oy = pad - minPy;
-  const canvas = Buffer.alloc(W * H * 4, 0);
 
-  for (const d of drawItems) {
-    const { width, height, rgba } = d.bmp;
-    const dx = d.px + ox;
-    const dy = d.py + oy;
-    for (let sy = 0; sy < height; sy++) {
-      const ty = dy + sy;
-      if (ty < 0 || ty >= H) continue;
-      for (let sx = 0; sx < width; sx++) {
-        const tx = dx + sx;
-        if (tx < 0 || tx >= W) continue;
-        const sp = (sy * width + sx) * 4;
-        if (rgba[sp + 3] > 0) {
-          const tp = (ty * W + tx) * 4;
-          canvas[tp]     = rgba[sp];
-          canvas[tp + 1] = rgba[sp + 1];
-          canvas[tp + 2] = rgba[sp + 2];
-          canvas[tp + 3] = 255;
+  const maxAllowedDim = 2800;
+  const maxDim = Math.max(W, H);
+  if (maxDim <= maxAllowedDim) {
+    const canvas = Buffer.alloc(W * H * 4, 0);
+    for (const d of drawItems) {
+      const { width, height, rgba } = d.bmp;
+      const dx = d.px + ox;
+      const dy = d.py + oy;
+      for (let sy = 0; sy < height; sy++) {
+        const ty = dy + sy;
+        if (ty < 0 || ty >= H) continue;
+        for (let sx = 0; sx < width; sx++) {
+          const tx = dx + sx;
+          if (tx < 0 || tx >= W) continue;
+          const sp = (sy * width + sx) * 4;
+          if (rgba[sp + 3] > 0) {
+            const tp = (ty * W + tx) * 4;
+            canvas[tp]     = rgba[sp];
+            canvas[tp + 1] = rgba[sp + 1];
+            canvas[tp + 2] = rgba[sp + 2];
+            canvas[tp + 3] = 255;
+          }
         }
       }
     }
+    return createPng(W, H, canvas);
+  } else {
+    // Auto-scale huge castles/dungeons so they render cleanly within memory limits
+    const scale = maxAllowedDim / maxDim;
+    const outW = Math.max(1, Math.round(W * scale));
+    const outH = Math.max(1, Math.round(H * scale));
+    const canvas = Buffer.alloc(outW * outH * 4, 0);
+
+    for (const d of drawItems) {
+      const { width, height, rgba } = d.bmp;
+      const dx = d.px + ox;
+      const dy = d.py + oy;
+      for (let sy = 0; sy < height; sy++) {
+        const ty = ((dy + sy) * scale) | 0;
+        if (ty < 0 || ty >= outH) continue;
+        for (let sx = 0; sx < width; sx++) {
+          const tx = ((dx + sx) * scale) | 0;
+          if (tx < 0 || tx >= outW) continue;
+          const sp = (sy * width + sx) * 4;
+          if (rgba[sp + 3] > 0) {
+            const tp = (ty * outW + tx) * 4;
+            canvas[tp]     = rgba[sp];
+            canvas[tp + 1] = rgba[sp + 1];
+            canvas[tp + 2] = rgba[sp + 2];
+            canvas[tp + 3] = 255;
+          }
+        }
+      }
+    }
+    return createPng(outW, outH, canvas);
+  }
+}
+
+// ==========================================
+// LIBRARY CACHE & MULTI HELPER ENGINE
+// ==========================================
+let libraryCache = null;
+let libraryMtime = 0;
+
+function loadRawLibrary() {
+  try {
+    if (!fs.existsSync(LIBRARY_FILE)) {
+      libraryCache = [];
+      return libraryCache;
+    }
+    const stat = fs.statSync(LIBRARY_FILE);
+    if (libraryCache && stat.mtimeMs === libraryMtime) {
+      return libraryCache;
+    }
+    libraryCache = JSON.parse(fs.readFileSync(LIBRARY_FILE, 'utf8'));
+    libraryMtime = stat.mtimeMs;
+    return libraryCache;
+  } catch (e) {
+    console.error('Error loading library.json:', e.message);
+    return libraryCache || [];
+  }
+}
+
+function saveRawLibrary(library) {
+  libraryCache = library;
+  const lines = library.map(item => JSON.stringify(item));
+  const content = '[\n' + lines.join(',\n') + '\n]\n';
+  fs.writeFileSync(LIBRARY_FILE, content, 'utf8');
+  try {
+    libraryMtime = fs.statSync(LIBRARY_FILE).mtimeMs;
+  } catch (_) {}
+}
+
+function buildMultiDataFromComponents(rawComponents, multiId = 0) {
+  if (!Array.isArray(rawComponents) || rawComponents.length === 0) return null;
+  let minX = 9999, maxX = -9999, minY = 9999, maxY = -9999, minZ = 9999, maxZ = -9999;
+  const floorZLevels = new Set();
+  const uniqueTiles = new Set();
+  const components = [];
+
+  for (const c of rawComponents) {
+    if (!c || c.itemId <= 1) continue;
+    const itemId = Number(c.itemId);
+    const x = Number(c.x || 0);
+    const y = Number(c.y || 0);
+    const z = Number(c.z || 0);
+    const flags = c.flags !== undefined ? Number(c.flags) : 1;
+    components.push({
+      itemId,
+      x,
+      y,
+      z,
+      flags,
+      hue: c.hue || 0,
+      isFixture: flags === 0,
+      expectedName: c.expectedName || (activeTileDataReader.isAvailable() ? (activeTileDataReader.getStaticTile(itemId)?.name || '') : '')
+    });
+    uniqueTiles.add(itemId);
+    if (x < minX) minX = x;
+    if (x > maxX) maxX = x;
+    if (y < minY) minY = y;
+    if (y > maxY) maxY = y;
+    if (z < minZ) minZ = z;
+    if (z > maxZ) maxZ = z;
+    floorZLevels.add(z);
   }
 
-  return createPng(W, H, canvas);
+  const width = (maxX >= minX) ? (maxX - minX + 1) : 0;
+  const depth = (maxY >= minY) ? (maxY - minY + 1) : 0;
+
+  return {
+    multiId: multiId || 0,
+    hex: '0x' + (multiId || 0).toString(16).toUpperCase().padStart(4, '0'),
+    count: components.length,
+    width,
+    depth,
+    bounds: { minX, maxX, minY, maxY, minZ, maxZ },
+    zLevels: Array.from(floorZLevels).sort((a, b) => a - b),
+    uniqueTiles: Array.from(uniqueTiles),
+    components
+  };
+}
+
+function getHouseMultiData(h, library = null) {
+  if (!h) return null;
+  if (h.multi !== undefined && h.multi !== null && activeMultiReader.isAvailable()) {
+    const md = activeMultiReader.getMulti(h.multi);
+    if (md && md.components && md.components.length > 0) return md;
+  }
+  if (Array.isArray(h.components) && h.components.length > 0) {
+    return buildMultiDataFromComponents(h.components, h.multi || 0);
+  }
+  const lib = library || loadRawLibrary();
+  const lh = lib.find(item =>
+    (h.libraryId && item.id === h.libraryId) ||
+    (h.id && item.id === h.id) ||
+    (h.multi !== undefined && item.multi !== undefined && item.multi === h.multi) ||
+    (h.name && item.name && h.name.trim().toLowerCase() === item.name.trim().toLowerCase())
+  );
+  if (lh && Array.isArray(lh.components) && lh.components.length > 0) {
+    return buildMultiDataFromComponents(lh.components, h.multi || lh.multi || 0);
+  }
+  return null;
 }
 
 function regenerateAllHouseImages() {
-  if (!activeArtReader.isAvailable() || !activeMultiReader.isAvailable()) {
-    return { success: false, error: 'Art or Multi binary files are not available.' };
+  if (!activeArtReader.isAvailable()) {
+    return { success: false, error: 'Art binary files are not available.' };
   }
   const houses = JSON.parse(fs.readFileSync(HOUSES_FILE, 'utf8'));
+  const library = loadRawLibrary();
   const imagesDir = path.join(__dirname, 'images');
   const floorsDir = path.join(__dirname, 'images_floors');
   if (!fs.existsSync(imagesDir)) fs.mkdirSync(imagesDir, { recursive: true });
@@ -662,8 +801,7 @@ function regenerateAllHouseImages() {
   let floorCount = 0;
 
   for (const h of houses) {
-    if (h.multi === undefined || h.multi === null) continue;
-    const multiData = activeMultiReader.getMulti(h.multi);
+    const multiData = getHouseMultiData(h, library);
     if (!multiData || !multiData.components || multiData.components.length === 0) continue;
 
     // 1. Full house image (including doors & house sign)
@@ -677,7 +815,9 @@ function regenerateAllHouseImages() {
 
     // 2. Floor cutaways (including doors & house sign up to floor.z + 15)
     if (Array.isArray(h.floors)) {
-      const prefix = h.multi.toString(16).toUpperCase().padStart(4, '0');
+      const prefix = (h.multi !== undefined && h.multi !== null)
+        ? h.multi.toString(16).toUpperCase().padStart(4, '0')
+        : (h.id || 'house');
       h.floors.forEach((fl, idx) => {
         const floorFile = fl.file || `${prefix}_f${idx + 1}.png`;
         const floorPng = renderMultiComponents(multiData.components, (fl.z ?? 0) + 15);
@@ -706,16 +846,11 @@ function getHousesList() {
     console.error('Error loading houses.json:', e.message);
   }
 
-  let library = [];
-  try {
-    if (fs.existsSync(LIBRARY_FILE)) {
-      library = JSON.parse(fs.readFileSync(LIBRARY_FILE, 'utf8'));
-    }
-  } catch (e) {}
+  const library = loadRawLibrary();
 
   // Augment houses with live compatibility and library status
   return houses.map(h => {
-    const multiData = activeMultiReader.getMulti(h.multi);
+    const multiData = getHouseMultiData(h, library);
     let isCompatible = true;
     let missingTiles = [];
 
@@ -732,7 +867,7 @@ function getHousesList() {
     const inLibrary = library.some(lh =>
       (h.libraryId && h.libraryId === lh.id) ||
       (h.id && h.id === lh.id) ||
-      (lh.multi !== undefined && lh.multi === h.multi) ||
+      (lh.multi !== undefined && lh.multi !== null && lh.multi === h.multi) ||
       (h.name && lh.name && h.name.trim().toLowerCase() === lh.name.trim().toLowerCase())
     );
 
@@ -746,15 +881,8 @@ function getHousesList() {
   });
 }
 
-function getLibraryList() {
-  let library = [];
-  try {
-    if (fs.existsSync(LIBRARY_FILE)) {
-      library = JSON.parse(fs.readFileSync(LIBRARY_FILE, 'utf8'));
-    }
-  } catch (e) {
-    console.error('Error loading library.json:', e.message);
-  }
+function getLibraryList(includeComponents = false) {
+  const library = loadRawLibrary();
 
   let serverHouses = [];
   try {
@@ -768,19 +896,20 @@ function getLibraryList() {
     const matchingServer = serverHouses.find(sh =>
       (sh.libraryId && sh.libraryId === item.id) ||
       (sh.id && sh.id === item.id) ||
-      (item.multi !== undefined && sh.multi === item.multi) ||
+      (item.multi !== undefined && item.multi !== null && sh.multi === item.multi) ||
       (sh.name && item.name && sh.name.trim().toLowerCase() === item.name.trim().toLowerCase())
     );
 
     const isInstalled = !!matchingServer;
-    const installedMulti = matchingServer ? matchingServer.multi : (item.multi || null);
+    const installedMulti = matchingServer ? matchingServer.multi : (item.multi ?? null);
 
     let missingTiles = [];
     if (item.components && activeArtReader.isAvailable()) {
       const tileCounts = {};
-      item.components.forEach(c => {
-        tileCounts[c.itemId] = (tileCounts[c.itemId] || 0) + 1;
-      });
+      for (let i = 0; i < item.components.length; i++) {
+        const tid = item.components[i].itemId;
+        if (tid > 1) tileCounts[tid] = (tileCounts[tid] || 0) + 1;
+      }
 
       for (const [idStr, count] of Object.entries(tileCounts)) {
         const tileId = parseInt(idStr, 10);
@@ -797,15 +926,797 @@ function getLibraryList() {
       }
     }
 
-    return {
+    const resItem = {
       ...item,
+      tiles: item.tiles || (item.components ? item.components.length : 0),
       isInstalled,
       installedMulti,
       isCompatible: missingTiles.length === 0,
       missingTileCount: missingTiles.length,
       missingTiles
     };
+
+    if (!includeComponents) {
+      delete resItem.components;
+    }
+    return resItem;
   });
+}
+
+// ==========================================
+// UO ARCHITECT & RAW TEXT PARSER ENGINE
+// ==========================================
+const pendingImportCache = new Map();
+
+function read7BitString(buf, pos) {
+  if (pos >= buf.length) throw new Error('Unexpected EOF reading string flag');
+  const flag = buf.readUInt8(pos++);
+  if (flag === 0) return { val: '', pos };
+  let len = 0;
+  let shift = 0;
+  while (true) {
+    if (pos >= buf.length) throw new Error('Unexpected EOF reading string length');
+    const b = buf.readUInt8(pos++);
+    len |= (b & 0x7F) << shift;
+    if ((b & 0x80) === 0) break;
+    shift += 7;
+    if (shift > 35) throw new Error('Corrupt 7-bit string length');
+  }
+  if (pos + len > buf.length) throw new Error('Unexpected EOF reading string bytes');
+  const val = buf.subarray(pos, pos + len).toString('utf8');
+  return { val, pos: pos + len };
+}
+
+function write7BitString(str) {
+  if (!str) return Buffer.from([0]);
+  const strBuf = Buffer.from(String(str), 'utf8');
+  let len = strBuf.length;
+  const lenBytes = [1]; // non-empty flag = 1
+  while (len >= 0x80) {
+    lenBytes.push((len & 0x7F) | 0x80);
+    len >>>= 7;
+  }
+  lenBytes.push(len & 0x7F);
+  return Buffer.concat([Buffer.from(lenBytes), strBuf]);
+}
+
+function parseUoaBinaryBuffer(buf, sourceFile = 'design.uoa', folderHint = '') {
+  if (!buf || buf.length < 4) throw new Error('File too small to be a binary .uoa design');
+  const version = buf.readInt16LE(0);
+  if (version !== 1 && version !== 2) {
+    throw new Error(`Unsupported binary .uoa version: ${version}`);
+  }
+
+  let pos = 2;
+  let designCount = 1;
+  if (version === 2) {
+    designCount = buf.readInt16LE(2);
+    pos = 4;
+  }
+
+  const designs = [];
+  for (let d = 0; d < designCount; d++) {
+    const s1 = read7BitString(buf, pos); pos = s1.pos;
+    const s2 = read7BitString(buf, pos); pos = s2.pos;
+    const s3 = read7BitString(buf, pos); pos = s3.pos;
+
+    if (pos + 20 > buf.length) throw new Error('Unexpected EOF reading design header');
+    const width = buf.readInt32LE(pos);
+    const height = buf.readInt32LE(pos + 4);
+    const userWidth = buf.readInt32LE(pos + 8);
+    const userHeight = buf.readInt32LE(pos + 12);
+    const count = buf.readInt32LE(pos + 16);
+    pos += 20;
+
+    if (count < 0 || pos + count * 12 > buf.length) {
+      throw new Error(`Invalid component count (${count}) in ${sourceFile}`);
+    }
+
+    const components = [];
+    for (let i = 0; i < count; i++) {
+      const itemId = buf.readUInt16LE(pos);
+      const x = buf.readInt16LE(pos + 2);
+      const y = buf.readInt16LE(pos + 4);
+      const z = buf.readInt16LE(pos + 6);
+      const level = buf.readInt16LE(pos + 8);
+      const hue = buf.readInt16LE(pos + 10);
+      pos += 12;
+      if (itemId > 1) {
+        components.push({
+          itemId,
+          x,
+          y,
+          z,
+          flags: 1,
+          level,
+          ...(hue ? { hue } : {})
+        });
+      }
+    }
+
+    const fallbackName = path.basename(sourceFile, path.extname(sourceFile)).replace(/[_-]+/g, ' ');
+    designs.push({
+      rawName: (s1.val || fallbackName).trim(),
+      rawCategory: (s2.val || '').trim(),
+      rawSubsection: (s3.val || '').trim(),
+      folderHint,
+      sourceFile: path.basename(sourceFile),
+      sourceFormat: version === 2 ? `UO Architect Batch (.uoa v2 #${d + 1})` : 'UO Architect (.uoa v1)',
+      width,
+      height,
+      userWidth,
+      userHeight,
+      components
+    });
+  }
+
+  return designs;
+}
+
+function parseUoaDesignsDatabase(idxBuf, binBuf, sourceFile = 'Designs.idx', folderHint = '') {
+  if (!idxBuf || idxBuf.length < 8) throw new Error('Invalid Designs.idx buffer');
+  const count = idxBuf.readInt32LE(0);
+  const version = idxBuf.readInt32LE(4);
+  if (version !== 0 || count < 0 || count > 100000) {
+    throw new Error(`Unsupported Designs.idx header (version=${version}, count=${count})`);
+  }
+
+  let pos = 8;
+  const designs = [];
+  for (let d = 0; d < count; d++) {
+    const s1 = read7BitString(idxBuf, pos); pos = s1.pos;
+    const s2 = read7BitString(idxBuf, pos); pos = s2.pos;
+    const s3 = read7BitString(idxBuf, pos); pos = s3.pos;
+
+    const width = idxBuf.readInt32LE(pos);
+    const height = idxBuf.readInt32LE(pos + 4);
+    const userWidth = idxBuf.readInt32LE(pos + 8);
+    const userHeight = idxBuf.readInt32LE(pos + 12);
+    const filePos = Number(idxBuf.readBigInt64LE(pos + 16));
+    const recordCount = idxBuf.readInt32LE(pos + 24);
+    pos += 28;
+
+    const components = [];
+    if (binBuf && filePos >= 0 && filePos < binBuf.length) {
+      let bpos = filePos;
+      for (let i = 0; i < recordCount; i++) {
+        if (bpos + 24 > binBuf.length) break;
+        const recVer = binBuf.readInt32LE(bpos);
+        const itemId = binBuf.readInt32LE(bpos + 4) & 0xFFFF;
+        const x = binBuf.readInt32LE(bpos + 8);
+        const y = binBuf.readInt32LE(bpos + 12);
+        const z = binBuf.readInt32LE(bpos + 16);
+        const level = binBuf.readInt32LE(bpos + 20);
+        const hue = recVer >= 1 && bpos + 28 <= binBuf.length ? binBuf.readInt32LE(bpos + 24) : 0;
+        bpos += (recVer === 0) ? 24 : 28;
+
+        if (itemId > 1) {
+          components.push({
+            itemId,
+            x,
+            y,
+            z,
+            flags: 1,
+            level,
+            ...(hue ? { hue } : {})
+          });
+        }
+      }
+    }
+
+    designs.push({
+      rawName: (s1.val || `Design #${d + 1}`).trim(),
+      rawCategory: (s2.val || '').trim(),
+      rawSubsection: (s3.val || '').trim(),
+      folderHint,
+      sourceFile: path.basename(sourceFile),
+      sourceFormat: 'UO Architect Database (Designs.idx/bin)',
+      width,
+      height,
+      userWidth,
+      userHeight,
+      components
+    });
+  }
+
+  return designs;
+}
+
+function parseIntOrHex(token) {
+  if (token === undefined || token === null) return NaN;
+  const s = String(token).trim();
+  if (!s) return NaN;
+  if (/^0x[0-9a-f]+$/i.test(s)) return parseInt(s, 16);
+  if (/^\$[0-9a-f]+$/i.test(s)) return parseInt(s.slice(1), 16);
+  if (/^[0-9a-f]+h$/i.test(s)) return parseInt(s.slice(0, -1), 16);
+  if (/^-?\d+$/.test(s)) return parseInt(s, 10);
+  return NaN;
+}
+
+function parseTextDesign(rawText, sourceFile = 'Raw Text Export', folderHint = '') {
+  const text = String(rawText || '').replace(/^\uFEFF/, '');
+  const baseName = path.basename(sourceFile, path.extname(sourceFile)).replace(/[_-]+/g, ' ').trim() || 'Imported Schematic';
+  let detectedName = '';
+  let detectedCategory = '';
+  let detectedSubsection = '';
+  let detectedAuthor = '';
+  let sourceFormat = 'Multi Text / [extract';
+  const components = [];
+
+  // 1. Check for XML format (<tile .../> or <Item .../>)
+  if (/<(tile|item|component)\b/i.test(text)) {
+    sourceFormat = 'XML Multi / WorldForge XML';
+    const nameMatch = text.match(/<multi[^>]*\bname=["']([^"']+)["']/i) || text.match(/<design[^>]*\bname=["']([^"']+)["']/i);
+    if (nameMatch) detectedName = nameMatch[1].trim();
+
+    const tagRegex = /<(?:tile|item|component)\b([^>]*)\/?>/gi;
+    let m;
+    while ((m = tagRegex.exec(text)) !== null) {
+      const attrs = m[1];
+      const getAttr = (names) => {
+        for (const n of names) {
+          const am = attrs.match(new RegExp(`\\b${n}\\s*=\\s*["']([^"']+)["']`, 'i'));
+          if (am) return am[1];
+        }
+        return null;
+      };
+      const idVal = parseIntOrHex(getAttr(['id', 'itemid', 'tile', 'graphic']));
+      const xVal = parseIntOrHex(getAttr(['x', 'dx', 'offsetx']));
+      const yVal = parseIntOrHex(getAttr(['y', 'dy', 'offsety']));
+      const zVal = parseIntOrHex(getAttr(['z', 'dz', 'offsetz']) ?? '0');
+      const flagsVal = parseIntOrHex(getAttr(['flags', 'flag', 'visible']) ?? '1');
+      const hueVal = parseIntOrHex(getAttr(['hue', 'color', 'colour']) ?? '0');
+      if (!isNaN(idVal) && idVal > 1 && !isNaN(xVal) && !isNaN(yVal)) {
+        components.push({
+          itemId: idVal & 0xFFFF,
+          x: xVal,
+          y: yVal,
+          z: isNaN(zVal) ? 0 : zVal,
+          flags: isNaN(flagsVal) ? 1 : flagsVal,
+          ...(hueVal > 0 ? { hue: hueVal } : {})
+        });
+      }
+    }
+  }
+
+  // 2. Check for WorldForge .wsc format (SECTION WORLDITEM ...)
+  if (components.length === 0 && /SECTION\s+WORLDITEM/i.test(text)) {
+    sourceFormat = 'WorldForge Script (.wsc)';
+    const blockRegex = /SECTION\s+WORLDITEM[^{]*\{([^}]*)\}/gi;
+    let m;
+    while ((m = blockRegex.exec(text)) !== null) {
+      const body = m[1];
+      const getField = (key) => {
+        const fm = body.match(new RegExp(`^\\s*${key}\\s+([^\\r\\n]+)`, 'mi'));
+        return fm ? fm[1].trim() : null;
+      };
+      const idVal = parseIntOrHex(getField('ID'));
+      const xVal = parseIntOrHex(getField('X'));
+      const yVal = parseIntOrHex(getField('Y'));
+      const zVal = parseIntOrHex(getField('Z') ?? '0');
+      const hueVal = parseIntOrHex(getField('COLOR') ?? getField('HUE') ?? '0');
+      if (!isNaN(idVal) && idVal > 1 && !isNaN(xVal) && !isNaN(yVal)) {
+        components.push({
+          itemId: idVal & 0xFFFF,
+          x: xVal,
+          y: yVal,
+          z: isNaN(zVal) ? 0 : zVal,
+          flags: 1,
+          ...(hueVal > 0 ? { hue: hueVal } : {})
+        });
+      }
+    }
+  }
+
+  // 3. Check for RunUO / ServUO C# script lines (mcl.Add, AddComponent, AddComplexComponent, MultiTileEntry)
+  if (components.length === 0 && /\b(mcl\.Add|AddComponent|AddComplexComponent|MultiTileEntry)\s*\(/i.test(text)) {
+    sourceFormat = 'RunUO / ServUO C# Script';
+    const classMatch = text.match(/class\s+([A-Za-z0-9_]+)/);
+    if (classMatch) detectedName = classMatch[1].replace(/([a-z])([A-Z])/g, '$1 $2');
+
+    const statements = text.split(/[\r\n;]+/);
+    for (const stmt of statements) {
+      // Match AddComplexComponent( (BaseAddon) this, itemId, x, y, z, hue, light, name, amount )
+      let m = stmt.match(/AddComplexComponent\s*\(\s*[^,]+,\s*(0x[0-9a-fA-F]+|-?\d+)\s*,\s*(-?\d+)\s*,\s*(-?\d+)\s*,\s*(-?\d+)(?:\s*,\s*(0x[0-9a-fA-F]+|-?\d+))?/);
+      if (m) {
+        const idVal = parseIntOrHex(m[1]);
+        const xVal = parseInt(m[2], 10);
+        const yVal = parseInt(m[3], 10);
+        const zVal = parseInt(m[4], 10);
+        const hueVal = m[5] ? parseIntOrHex(m[5]) : 0;
+        if (idVal > 1) components.push({ itemId: idVal & 0xFFFF, x: xVal, y: yVal, z: zVal, flags: 1, ...(hueVal > 0 ? { hue: hueVal } : {}) });
+        continue;
+      }
+      // Match AddComponent( new AddonComponent( itemId ), x, y, z ) or mcl.Add( itemId, x, y, z )
+      m = stmt.match(/(?:mcl\.Add|AddComponent|MultiTileEntry)\s*\((?:[^()]*\()?\s*(0x[0-9a-fA-F]+|-?\d+)\s*\)?\s*,\s*(-?\d+)\s*,\s*(-?\d+)\s*,\s*(-?\d+)/);
+      if (m) {
+        const idVal = parseIntOrHex(m[1]);
+        const xVal = parseInt(m[2], 10);
+        const yVal = parseInt(m[3], 10);
+        const zVal = parseInt(m[4], 10);
+        if (idVal > 1) components.push({ itemId: idVal & 0xFFFF, x: xVal, y: yVal, z: zVal, flags: 1 });
+      }
+    }
+  }
+
+  // 4. Standard Multi Text / [extract / CSV / Raw Coordinate List
+  if (components.length === 0) {
+    const lines = text.split(/\r?\n/);
+    for (const rawLine of lines) {
+      const line = rawLine.trim();
+      if (!line) continue;
+
+      // Extract metadata from comments if present
+      if (/^(#|\/\/|;)/.test(line)) {
+        const meta = line.replace(/^(#|\/\/|;)+\s*/, '');
+        const kv = meta.match(/^(name|title|category|subsection|author|creator|by)\s*[:=]\s*(.+)$/i);
+        if (kv) {
+          const key = kv[1].toLowerCase();
+          const val = kv[2].trim();
+          if (key === 'name' || key === 'title') detectedName = val;
+          else if (key === 'category') detectedCategory = val;
+          else if (key === 'subsection') detectedSubsection = val;
+          else if (key === 'author' || key === 'creator' || key === 'by') detectedAuthor = val;
+        }
+        continue;
+      }
+
+      // Skip standard MultiText headers ("6 version", "1 template id", "-1 item version", "1125 num components")
+      if (/\b(version|template\s+id|num\s+components)\b/i.test(line)) {
+        sourceFormat = 'UO Multi Text ([extract / .txt)';
+        continue;
+      }
+
+      // Skip CSV header row if present
+      if (/^(itemid|tileid|id|graphic)\b/i.test(line)) {
+        sourceFormat = 'CSV / Tabular Multi Export';
+        continue;
+      }
+
+      // Strip trailing comments
+      const cleanLine = line.replace(/\s*(#|\/\/|;).*$/, '').trim();
+      if (!cleanLine) continue;
+
+      const tokens = cleanLine.split(/[\s,;|\t]+/).filter(Boolean);
+      if (tokens.length < 4) continue;
+
+      const itemId = parseIntOrHex(tokens[0]);
+      const x = parseIntOrHex(tokens[1]);
+      const y = parseIntOrHex(tokens[2]);
+      const z = parseIntOrHex(tokens[3]);
+      const flags = tokens.length >= 5 ? parseIntOrHex(tokens[4]) : 1;
+      const hue = tokens.length >= 6 ? parseIntOrHex(tokens[5]) : 0;
+
+      if (!isNaN(itemId) && itemId > 1 && itemId < 65536 && !isNaN(x) && !isNaN(y) && !isNaN(z)) {
+        components.push({
+          itemId,
+          x,
+          y,
+          z,
+          flags: isNaN(flags) ? 1 : flags,
+          ...(!isNaN(hue) && hue > 0 ? { hue } : {})
+        });
+      }
+    }
+  }
+
+  if (components.length === 0) {
+    throw new Error(`No valid multi tile components found in ${sourceFile}`);
+  }
+
+  // Normalize world coordinates if exported directly from world map coordinates (e.g. X > 250 or Y > 250)
+  let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity, minZ = Infinity;
+  for (const c of components) {
+    if (c.x < minX) minX = c.x;
+    if (c.x > maxX) maxX = c.x;
+    if (c.y < minY) minY = c.y;
+    if (c.y > maxY) maxY = c.y;
+    if (c.z < minZ) minZ = c.z;
+  }
+
+  if (Math.abs(minX) > 250 || Math.abs(minY) > 250) {
+    const cx = Math.round((minX + maxX) / 2);
+    const cy = Math.round((minY + maxY) / 2);
+    const cz = (minZ > 25 || minZ < -25) ? minZ : 0;
+    for (const c of components) {
+      c.x -= cx;
+      c.y -= cy;
+      c.z -= cz;
+    }
+    minX -= cx; maxX -= cx;
+    minY -= cy; maxY -= cy;
+  }
+
+  const width = maxX >= minX ? (maxX - minX + 1) : 1;
+  const height = maxY >= minY ? (maxY - minY + 1) : 1;
+
+  return [{
+    rawName: detectedName || baseName,
+    rawCategory: detectedCategory,
+    rawSubsection: detectedSubsection,
+    rawAuthor: detectedAuthor,
+    folderHint,
+    sourceFile: path.basename(sourceFile),
+    sourceFormat,
+    width,
+    height,
+    userWidth: width,
+    userHeight: height,
+    components
+  }];
+}
+
+const KNOWN_AUTHORS = new Map([
+  ['goldfeather', 'Goldfeather'],
+  ['hellrazor', 'HellRazor'],
+  ['mirage', 'Mirage'],
+  ['lucid nagual', 'Lucid Nagual'],
+  ['kiki', 'Kiki'],
+  ['hammerhand', 'Hammerhand'],
+  ['osi', 'OSI / Origin'],
+  ['origin', 'OSI / Origin'],
+  ['runuo', 'RunUO Community']
+]);
+
+function inferCategoryAndAuthor(rawName, rawCategory, rawSubsection, folderHint = '', explicitAuthor = '') {
+  let author = explicitAuthor || '';
+  const cLower = (rawCategory || '').trim().toLowerCase();
+  const sLower = (rawSubsection || '').trim().toLowerCase();
+  const fLower = (folderHint || '').trim().toLowerCase();
+
+  if (!author) {
+    if (KNOWN_AUTHORS.has(cLower)) author = KNOWN_AUTHORS.get(cLower);
+    else if (KNOWN_AUTHORS.has(sLower)) author = KNOWN_AUTHORS.get(sLower);
+    else if (KNOWN_AUTHORS.has(fLower)) author = KNOWN_AUTHORS.get(fLower);
+    else if (rawCategory && !/^(houses?|castles?|towers?|villas?|shops?|caves?|dungeons?|dungon|templates?|extracts?|custom|unasigned|unassigned|rares?|boats?|evil.*|foundations?|\d+\s*x\s*\d+)$/i.test(rawCategory.trim())) {
+      author = rawCategory.trim();
+    }
+  }
+  if (!author) author = 'UO Architect Community';
+
+  const combined = `${rawName || ''} ${rawCategory || ''} ${rawSubsection || ''} ${folderHint || ''}`.toLowerCase();
+  let category = 'Custom Housing';
+
+  if (/\b(template|foundation|walkway|roof|corner|wall|stair|piece|set)\b/.test(combined) && !/\b(house|castle|villa|keep|tower|mansion)\b/.test(combined)) {
+    category = 'Modular & Templates';
+  } else if (/\b(cave|dungeon|dungon|mine|crypt|underworld|hell|lava|necro|drow|evil|sanctuary|ruin)\b/.test(combined)) {
+    category = 'Dungeons & Caves';
+  } else if (/\b(castle|keep|fortress|stronghold|citadel|palace|compound|walled|courtyard)\b/.test(combined)) {
+    category = 'Castles & Keeps';
+  } else if (/\b(tower|spire|watchtower|mage|wizard|guard\s*post)\b/.test(combined)) {
+    category = 'Towers';
+  } else if (/\b(shop|shoppe|forge|smith|tavern|inn|bar|pub|stable|guild|temple|church|cathedral|theater|arena|market|bank|bakery|jail|barn)\b/.test(combined)) {
+    category = 'Shops & Guilds';
+  } else if (/\b(asian|pagoda|dojo|oriental|egypt|egyptian|pyramid|oasis|desert|arabian|ship|boat|pirate|tree\s*house|tree|elven|modern|park|fountain)\b/.test(combined)) {
+    category = 'Themed & Cultural';
+  } else if (/\b(villa|mansion|manor|estate|patio|two\s*story|2\s*story|L-shape|large\s*brick|marble|sandstone)\b/.test(combined)) {
+    category = 'Villas & Mansions';
+  } else if (/\b(log|cabin|cottage|wood|wooden|shack|hut|tent|small)\b/.test(combined)) {
+    category = 'Cottages & Log Homes';
+  } else if (/\b(house|home)\b/.test(combined)) {
+    category = 'Classic Housing';
+  }
+
+  return { category, author };
+}
+
+function detectFloorsFromComponents(components, filePrefix) {
+  if (!Array.isArray(components) || components.length === 0) {
+    return [{ z: 0, file: `${filePrefix}_f1.png` }];
+  }
+
+  let minZ = Infinity, maxZ = -Infinity;
+  const surfaceZCounts = new Map();
+  const allZCounts = new Map();
+
+  for (const c of components) {
+    if (c.z < minZ) minZ = c.z;
+    if (c.z > maxZ) maxZ = c.z;
+    allZCounts.set(c.z, (allZCounts.get(c.z) || 0) + 1);
+
+    if (activeTileDataReader.isAvailable()) {
+      const td = activeTileDataReader.getStaticTile(c.itemId);
+      if (td && td.flagsFlags && td.flagsFlags.flagSurface && !td.flagsFlags.flagRoof) {
+        surfaceZCounts.set(c.z, (surfaceZCounts.get(c.z) || 0) + 1);
+      }
+    }
+  }
+
+  const zSpan = maxZ - minZ;
+  if (zSpan < 18) {
+    // Single-story structure
+    const baseZ = Math.max(0, minZ === Infinity ? 0 : minZ);
+    return [{ z: baseZ, file: `${filePrefix}_f1.png` }];
+  }
+
+  const countsMap = surfaceZCounts.size > 0 ? surfaceZCounts : allZCounts;
+  const minThreshold = Math.max(4, Math.floor(components.length * 0.012));
+  const candidates = Array.from(countsMap.entries())
+    .filter(([z, cnt]) => cnt >= minThreshold && z <= maxZ - 5)
+    .sort((a, b) => b[1] - a[1]);
+
+  const pickedZs = [];
+  for (const [z] of candidates) {
+    if (pickedZs.every(pz => Math.abs(pz - z) >= 15)) {
+      pickedZs.push(z);
+      if (pickedZs.length >= 5) break;
+    }
+  }
+
+  if (pickedZs.length === 0) {
+    pickedZs.push(Math.max(0, minZ));
+  }
+  pickedZs.sort((a, b) => a - b);
+
+  return pickedZs.map((z, idx) => ({
+    z,
+    file: `${filePrefix}_f${idx + 1}.png`
+  }));
+}
+
+function estimateHouseStats(w, d, tileCount, floorCount) {
+  const area = Math.max(16, (w || 10) * (d || 10));
+  const tiles = Math.max(25, tileCount || 100);
+  const floors = Math.max(1, floorCount || 1);
+
+  const lockdowns = Math.min(5000, Math.max(80, Math.round(45 + Math.sqrt(tiles) * 9.5 + Math.sqrt(area) * 6 + (floors - 1) * 35)));
+  const storage = lockdowns + 270;
+  const vendors = Math.min(20, Math.max(1, Math.round(lockdowns / 38)));
+  const rawCost = tiles * 240 + area * 165 * Math.pow(floors, 0.85);
+  const cost = Math.max(20000, Math.round(rawCost / 500) * 500);
+
+  return { cost, storage, lockdowns, vendors };
+}
+
+function normalizeDesignToLibraryEntry(rawDesign, indexHint = 0) {
+  const name = (rawDesign.name || rawDesign.rawName || 'Imported House').trim();
+  const baseSlug = name.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '') || 'uoa_house';
+
+  // Compute deterministic content hash so re-scanning produces stable IDs
+  const compSample = (rawDesign.components || []).slice(0, 40).map(c => `${c.itemId}:${c.x},${c.y},${c.z}`).join('|');
+  const hashHex = crypto.createHash('md5')
+    .update(`${name}|${(rawDesign.components || []).length}|${compSample}`)
+    .digest('hex')
+    .slice(0, 6);
+
+  const id = rawDesign.id || `uoa_${baseSlug}_${hashHex}`;
+  const filePrefix = id;
+
+  // Compute footprint from components
+  let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+  const cleanComponents = [];
+  const tileCounts = {};
+
+  for (const c of (rawDesign.components || [])) {
+    if (!c || c.itemId <= 1) continue;
+    const itemId = Number(c.itemId) & 0xFFFF;
+    const x = Number(c.x || 0);
+    const y = Number(c.y || 0);
+    const z = Number(c.z || 0);
+    const flags = c.flags !== undefined ? Number(c.flags) : 1;
+    if (x < minX) minX = x;
+    if (x > maxX) maxX = x;
+    if (y < minY) minY = y;
+    if (y > maxY) maxY = y;
+    tileCounts[itemId] = (tileCounts[itemId] || 0) + 1;
+    cleanComponents.push({
+      itemId,
+      x,
+      y,
+      z,
+      flags,
+      ...(c.hue ? { hue: Number(c.hue) } : {})
+    });
+  }
+
+  const w = rawDesign.w || (maxX >= minX ? (maxX - minX + 1) : (rawDesign.width || 12));
+  const d = rawDesign.d || (maxY >= minY ? (maxY - minY + 1) : (rawDesign.height || 12));
+  const floors = rawDesign.floors && rawDesign.floors.length > 0
+    ? rawDesign.floors
+    : detectFloorsFromComponents(cleanComponents, filePrefix);
+
+  const inferred = inferCategoryAndAuthor(
+    name,
+    rawDesign.rawCategory,
+    rawDesign.rawSubsection,
+    rawDesign.folderHint,
+    rawDesign.author || rawDesign.rawAuthor
+  );
+
+  const category = rawDesign.category || inferred.category;
+  const author = rawDesign.author || inferred.author;
+  const stats = estimateHouseStats(w, d, cleanComponents.length, floors.length);
+
+  const uoaLineage = [rawDesign.rawCategory, rawDesign.rawSubsection].filter(Boolean).join(' / ');
+  const description = rawDesign.description ||
+    `Imported from ${rawDesign.sourceFormat || 'UO Architect'}${uoaLineage ? ` (${uoaLineage})` : ''} — ${w}x${d} footprint, ${floors.length} floor${floors.length > 1 ? 's' : ''}, ${cleanComponents.length.toLocaleString()} tiles.`;
+
+  // Compatibility check against activeArtReader
+  const missingTiles = [];
+  if (activeArtReader.isAvailable()) {
+    for (const [idStr, count] of Object.entries(tileCounts)) {
+      const tileId = parseInt(idStr, 10);
+      const entry = activeArtReader.getStaticArtEntry(tileId);
+      if (!entry) {
+        missingTiles.push({
+          itemId: tileId,
+          hex: '0x' + tileId.toString(16).toUpperCase().padStart(4, '0'),
+          count,
+          expectedName: `Custom Tile 0x${tileId.toString(16).toUpperCase()}`
+        });
+      }
+    }
+  }
+
+  return {
+    id,
+    tempId: `${id}_${indexHint}`,
+    name,
+    category,
+    author,
+    rawCategory: rawDesign.rawCategory || '',
+    rawSubsection: rawDesign.rawSubsection || '',
+    sourceFile: rawDesign.sourceFile || '',
+    sourceFormat: rawDesign.sourceFormat || 'UO Architect (.uoa)',
+    description,
+    cost: Number(rawDesign.cost || stats.cost),
+    storage: Number(rawDesign.storage || stats.storage),
+    lockdowns: Number(rawDesign.lockdowns || stats.lockdowns),
+    vendors: Number(rawDesign.vendors || stats.vendors),
+    w,
+    d,
+    tiles: cleanComponents.length,
+    file: `${filePrefix}.png`,
+    floors,
+    isCompatible: missingTiles.length === 0,
+    missingTileCount: missingTiles.length,
+    missingTiles,
+    components: cleanComponents
+  };
+}
+
+function serializeToUoaBuffer(house, components) {
+  const nameBuf = write7BitString(house.name || 'Exported House');
+  const catBuf = write7BitString(house.category || 'Custom Housing');
+  const subBuf = write7BitString(house.author || 'Studio');
+
+  const comps = (components || []).filter(c => c && c.itemId > 1);
+  let minX = 0, maxX = 0, minY = 0, maxY = 0;
+  if (comps.length > 0) {
+    minX = Math.min(...comps.map(c => c.x));
+    maxX = Math.max(...comps.map(c => c.x));
+    minY = Math.min(...comps.map(c => c.y));
+    maxY = Math.max(...comps.map(c => c.y));
+  }
+  const w = house.w || (maxX - minX + 1) || 12;
+  const h = house.d || (maxY - minY + 1) || 12;
+
+  const verBuf = Buffer.alloc(2);
+  verBuf.writeInt16LE(1, 0); // Version 1 (.uoa single design)
+
+  const dimsBuf = Buffer.alloc(20);
+  dimsBuf.writeInt32LE(w, 0);
+  dimsBuf.writeInt32LE(h, 4);
+  dimsBuf.writeInt32LE(w, 8);
+  dimsBuf.writeInt32LE(h, 12);
+  dimsBuf.writeInt32LE(comps.length, 16);
+
+  const itemsBuf = Buffer.alloc(comps.length * 12);
+  for (let i = 0; i < comps.length; i++) {
+    const c = comps[i];
+    const off = i * 12;
+    itemsBuf.writeUInt16LE(c.itemId & 0xFFFF, off);
+    itemsBuf.writeInt16LE(c.x, off + 2);
+    itemsBuf.writeInt16LE(c.y, off + 4);
+    itemsBuf.writeInt16LE(c.z, off + 6);
+    itemsBuf.writeInt16LE(c.level || 1, off + 8);
+    itemsBuf.writeInt16LE(c.hue || 0, off + 10);
+  }
+
+  return Buffer.concat([verBuf, nameBuf, catBuf, subBuf, dimsBuf, itemsBuf]);
+}
+
+function serializeToMultiText(house, components) {
+  const comps = (components || []).filter(c => c && c.itemId > 1);
+  const lines = [
+    '6 version',
+    '1 template id',
+    '-1 item version',
+    `${comps.length} num components`
+  ];
+  for (const c of comps) {
+    lines.push(`${c.itemId} ${c.x} ${c.y} ${c.z} ${c.flags ?? 1}`);
+  }
+  return lines.join('\r\n') + '\r\n';
+}
+
+function scanDirectoryForDesigns(rootDir, deduplicate = true) {
+  if (!rootDir || !fs.existsSync(rootDir)) {
+    throw new Error(`Directory does not exist: ${rootDir}`);
+  }
+
+  const rawDesigns = [];
+  const errors = [];
+
+  function walk(dir, folderHint = '') {
+    const entries = fs.readdirSync(dir, { withFileTypes: true });
+
+    // Check for Designs.idx + Designs.bin pair in this directory
+    const idxEntry = entries.find(e => e.isFile() && e.name.toLowerCase() === 'designs.idx');
+    const binEntry = entries.find(e => e.isFile() && e.name.toLowerCase() === 'designs.bin');
+    if (idxEntry && binEntry) {
+      try {
+        const idxBuf = fs.readFileSync(path.join(dir, idxEntry.name));
+        const binBuf = fs.readFileSync(path.join(dir, binEntry.name));
+        const dbDesigns = parseUoaDesignsDatabase(idxBuf, binBuf, path.join(dir, idxEntry.name), folderHint);
+        rawDesigns.push(...dbDesigns);
+      } catch (err) {
+        errors.push({ file: path.join(dir, idxEntry.name), error: err.message });
+      }
+    }
+
+    for (const entry of entries) {
+      const fullPath = path.join(dir, entry.name);
+      if (entry.isDirectory()) {
+        walk(fullPath, entry.name);
+        continue;
+      }
+      if (!entry.isFile()) continue;
+
+      const ext = path.extname(entry.name).toLowerCase();
+      if (ext === '.uoa') {
+        try {
+          const buf = fs.readFileSync(fullPath);
+          const v = buf.length >= 2 ? buf.readInt16LE(0) : 0;
+          if (v === 1 || v === 2) {
+            rawDesigns.push(...parseUoaBinaryBuffer(buf, fullPath, folderHint));
+          } else {
+            rawDesigns.push(...parseTextDesign(buf.toString('utf8'), fullPath, folderHint));
+          }
+        } catch (err) {
+          errors.push({ file: fullPath, error: err.message });
+        }
+      } else if (['.txt', '.wsc', '.csv', '.xml'].includes(ext)) {
+        // Skip readme/license text files
+        if (/^(readme|license|changelog|notes|install|credits|housebase|scriptbase)/i.test(entry.name)) continue;
+        try {
+          const txt = fs.readFileSync(fullPath, 'utf8');
+          rawDesigns.push(...parseTextDesign(txt, fullPath, folderHint));
+        } catch (err) {
+          // Ignore non-schematic text files silently unless they look like multis
+        }
+      }
+    }
+  }
+
+  walk(rootDir, '');
+
+  const existingLibrary = loadRawLibrary();
+  const seenKeys = new Set();
+  const normalized = [];
+
+  for (let i = 0; i < rawDesigns.length; i++) {
+    const raw = rawDesigns[i];
+    if (!raw.components || raw.components.length === 0) continue;
+
+    const norm = normalizeDesignToLibraryEntry(raw, i);
+    const dedupeKey = `${norm.name.toLowerCase()}|${norm.tiles}`;
+    if (deduplicate && seenKeys.has(dedupeKey)) {
+      continue;
+    }
+    seenKeys.add(dedupeKey);
+
+    const alreadyInLibrary = existingLibrary.some(lh =>
+      lh.id === norm.id ||
+      (lh.name && lh.name.trim().toLowerCase() === norm.name.toLowerCase() && lh.tiles === norm.tiles)
+    );
+
+    norm.alreadyInLibrary = alreadyInLibrary;
+    pendingImportCache.set(norm.tempId, norm);
+    normalized.push(norm);
+  }
+
+  return { designs: normalized, errors };
 }
 
 // ==========================================
@@ -1204,8 +2115,9 @@ function parseBody(req) {
 }
 
 const server = http.createServer(async (req, res) => {
-  const parsedUrl = url.parse(req.url, true);
-  const pathname = parsedUrl.pathname;
+  const reqUrl = new URL(req.url || '/', `http://${req.headers.host || 'localhost'}`);
+  const pathname = reqUrl.pathname;
+  const parsedUrl = { pathname, query: Object.fromEntries(reqUrl.searchParams.entries()) };
 
   // CORS headers
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -1294,8 +2206,8 @@ const server = http.createServer(async (req, res) => {
         return;
       }
 
-      // Add full multi component breakdown
-      const multiData = activeMultiReader.getMulti(house.multi);
+      // Add full multi component breakdown (from multi.mul or linked library entry)
+      const multiData = getHouseMultiData(house);
       res.writeHead(200, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify({ ...house, multiData }));
       return;
@@ -1381,7 +2293,7 @@ const server = http.createServer(async (req, res) => {
     // API: HOUSE DESIGN LIBRARY (ONLINE / COMMUNITY REPO)
     // ----------------------------------------------------
     if (pathname === '/api/library' && req.method === 'GET') {
-      const library = getLibraryList();
+      const library = getLibraryList(false);
       res.writeHead(200, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify(library));
       return;
@@ -1389,12 +2301,7 @@ const server = http.createServer(async (req, res) => {
 
     if (pathname === '/api/library/add' && req.method === 'POST') {
       const data = await parseBody(req);
-      let library = [];
-      try {
-        if (fs.existsSync(LIBRARY_FILE)) {
-          library = JSON.parse(fs.readFileSync(LIBRARY_FILE, 'utf8'));
-        }
-      } catch (e) {}
+      const library = loadRawLibrary();
 
       // Check if house with same name or multi already exists in library
       const exists = library.find(lh =>
@@ -1421,8 +2328,7 @@ const server = http.createServer(async (req, res) => {
             x: c.x,
             y: c.y,
             z: c.z,
-            flags: c.flags ?? 1,
-            expectedName: activeTileDataReader.isAvailable() ? (activeTileDataReader.getStaticTile(c.itemId)?.name || 'Tile') : 'Tile'
+            flags: c.flags ?? 1
           }));
         }
       }
@@ -1440,23 +2346,23 @@ const server = http.createServer(async (req, res) => {
         w: data.w || 12,
         d: data.d || 12,
         tiles: data.tiles || (components.length || 200),
-        file: data.file || '',
-        floors: data.floors || [{ z: 0, file: '' }],
+        file: data.file || `${id}.png`,
+        floors: data.floors || detectFloorsFromComponents(components, id),
         components,
         multi: data.multi
       };
 
       library.push(newLibHouse);
-      fs.writeFileSync(LIBRARY_FILE, JSON.stringify(library, null, 2), 'utf8');
+      saveRawLibrary(library);
 
       res.writeHead(200, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ success: true, house: newLibHouse }));
+      res.end(JSON.stringify({ success: true, house: { ...newLibHouse, components: undefined } }));
       return;
     }
 
     if (pathname === '/api/library/import' && req.method === 'POST') {
       const data = await parseBody(req);
-      const library = JSON.parse(fs.readFileSync(LIBRARY_FILE, 'utf8'));
+      const library = loadRawLibrary();
       const libHouse = library.find(h => h.id === data.id);
       if (!libHouse) {
         res.writeHead(404, { 'Content-Type': 'application/json' });
@@ -1466,7 +2372,7 @@ const server = http.createServer(async (req, res) => {
 
       // Assign a multi ID if needed or find next available custom multi
       const houses = JSON.parse(fs.readFileSync(HOUSES_FILE, 'utf8'));
-      const newMulti = data.multi || (Math.max(...houses.map(h => h.multi), 0x9F) + 1);
+      const newMulti = data.multi || (Math.max(...houses.map(h => h.multi || 0), 0x9F) + 1);
 
       const importedHouse = {
         name: data.name || libHouse.name,
@@ -1475,11 +2381,11 @@ const server = http.createServer(async (req, res) => {
         storage: Number(data.storage || libHouse.storage),
         lockdowns: Number(data.lockdowns || libHouse.lockdowns),
         vendors: Number(data.vendors || libHouse.vendors),
-        file: libHouse.file || '008E_Old_Stone_Home_And_Shoppe.png',
+        file: libHouse.file || `${libHouse.id}.png`,
         w: libHouse.w || 14,
         d: libHouse.d || 14,
-        floors: libHouse.floors || [{ z: 0, file: '' }],
-        tiles: libHouse.tiles || 500,
+        floors: libHouse.floors || [{ z: 0, file: `${libHouse.id}_f1.png` }],
+        tiles: libHouse.tiles || (libHouse.components ? libHouse.components.length : 500),
         libraryId: libHouse.id,
         isCustom: true
       };
@@ -1494,7 +2400,7 @@ const server = http.createServer(async (req, res) => {
 
     if (pathname === '/api/library/resolve-and-import' && req.method === 'POST') {
       const data = await parseBody(req);
-      const library = JSON.parse(fs.readFileSync(LIBRARY_FILE, 'utf8'));
+      const library = loadRawLibrary();
       const libIndex = library.findIndex(h => h.id === data.id);
       if (libIndex === -1) {
         res.writeHead(404, { 'Content-Type': 'application/json' });
@@ -1510,49 +2416,64 @@ const server = http.createServer(async (req, res) => {
         libHouse.components = libHouse.components.map(comp => {
           if (mappings[comp.itemId]) {
             const newId = Number(mappings[comp.itemId]);
-            const td = activeTileDataReader.isAvailable() ? activeTileDataReader.getStaticTile(newId) : null;
             return {
               ...comp,
-              itemId: newId,
-              expectedName: td ? td.name : comp.expectedName
+              itemId: newId
             };
           }
           return comp;
         });
-        fs.writeFileSync(LIBRARY_FILE, JSON.stringify(library, null, 2), 'utf8');
+        saveRawLibrary(library);
+
+        // Delete cached images so re-rendered sprites reflect resolved tiles
+        if (libHouse.file) {
+          const fp = path.join(__dirname, 'images', libHouse.file);
+          if (fs.existsSync(fp)) { try { fs.unlinkSync(fp); } catch (_) {} }
+        }
+        if (Array.isArray(libHouse.floors)) {
+          for (const fl of libHouse.floors) {
+            if (fl.file) {
+              const ffp = path.join(__dirname, 'images_floors', fl.file);
+              if (fs.existsSync(ffp)) { try { fs.unlinkSync(ffp); } catch (_) {} }
+            }
+          }
+        }
       }
 
-      // Add to houses.json
-      const houses = JSON.parse(fs.readFileSync(HOUSES_FILE, 'utf8'));
-      const newMulti = data.multi || (Math.max(...houses.map(h => h.multi), 0x9F) + 1);
+      // Add to houses.json unless resolveOnly is specified
+      let importedHouse = null;
+      if (!data.resolveOnly) {
+        const houses = JSON.parse(fs.readFileSync(HOUSES_FILE, 'utf8'));
+        const newMulti = data.multi || (Math.max(...houses.map(h => h.multi || 0), 0x9F) + 1);
 
-      const importedHouse = {
-        name: data.name || libHouse.name,
-        multi: newMulti,
-        cost: Number(data.cost || libHouse.cost),
-        storage: Number(data.storage || libHouse.storage),
-        lockdowns: Number(data.lockdowns || libHouse.lockdowns),
-        vendors: Number(data.vendors || libHouse.vendors),
-        file: libHouse.file || '008E_Old_Stone_Home_And_Shoppe.png',
-        w: libHouse.w || 14,
-        d: libHouse.d || 14,
-        floors: libHouse.floors || [{ z: 0, file: '' }],
-        tiles: libHouse.tiles || 500,
-        libraryId: libHouse.id,
-        isCustom: true
-      };
+        importedHouse = {
+          name: data.name || libHouse.name,
+          multi: newMulti,
+          cost: Number(data.cost || libHouse.cost),
+          storage: Number(data.storage || libHouse.storage),
+          lockdowns: Number(data.lockdowns || libHouse.lockdowns),
+          vendors: Number(data.vendors || libHouse.vendors),
+          file: libHouse.file || `${libHouse.id}.png`,
+          w: libHouse.w || 14,
+          d: libHouse.d || 14,
+          floors: libHouse.floors || [{ z: 0, file: `${libHouse.id}_f1.png` }],
+          tiles: libHouse.tiles || (libHouse.components ? libHouse.components.length : 500),
+          libraryId: libHouse.id,
+          isCustom: true
+        };
 
-      houses.push(importedHouse);
-      fs.writeFileSync(HOUSES_FILE, JSON.stringify(houses, null, 2), 'utf8');
+        houses.push(importedHouse);
+        fs.writeFileSync(HOUSES_FILE, JSON.stringify(houses, null, 2), 'utf8');
+      }
 
       res.writeHead(200, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ success: true, house: importedHouse }));
+      res.end(JSON.stringify({ success: true, house: importedHouse || { ...libHouse, components: undefined } }));
       return;
     }
 
     if (pathname.startsWith('/api/library/') && req.method === 'GET') {
       const libId = decodeURIComponent(pathname.replace('/api/library/', ''));
-      const library = getLibraryList();
+      const library = getLibraryList(true);
       const libHouse = library.find(h => h.id === libId);
       if (!libHouse) {
         res.writeHead(404, { 'Content-Type': 'application/json' });
@@ -1560,34 +2481,16 @@ const server = http.createServer(async (req, res) => {
         return;
       }
 
-      let multiData = null;
-      if (libHouse.multi !== undefined && libHouse.multi !== null && activeMultiReader.isAvailable()) {
-        multiData = activeMultiReader.getMulti(libHouse.multi);
-      }
-      if (!multiData && Array.isArray(libHouse.components) && libHouse.components.length > 0) {
-        const uniqueTiles = Array.from(new Set(libHouse.components.map(c => c.itemId)));
-        multiData = {
-          multiId: libHouse.multi || 0,
-          count: libHouse.components.length,
-          uniqueTiles,
-          components: libHouse.components
-        };
-      }
-
+      const multiData = getHouseMultiData(libHouse);
       res.writeHead(200, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ ...libHouse, multiData }));
+      res.end(JSON.stringify({ ...libHouse, components: undefined, multiData }));
       return;
     }
 
     if (pathname.startsWith('/api/library/') && req.method === 'PUT') {
       const libId = decodeURIComponent(pathname.replace('/api/library/', ''));
       const data = await parseBody(req);
-      let library = [];
-      try {
-        if (fs.existsSync(LIBRARY_FILE)) {
-          library = JSON.parse(fs.readFileSync(LIBRARY_FILE, 'utf8'));
-        }
-      } catch (e) {}
+      const library = loadRawLibrary();
 
       const idx = library.findIndex(h => h.id === libId);
       if (idx === -1) {
@@ -1607,21 +2510,16 @@ const server = http.createServer(async (req, res) => {
       if (data.w !== undefined && Number(data.w) > 0) library[idx].w = Number(data.w);
       if (data.d !== undefined && Number(data.d) > 0) library[idx].d = Number(data.d);
 
-      fs.writeFileSync(LIBRARY_FILE, JSON.stringify(library, null, 2), 'utf8');
+      saveRawLibrary(library);
 
       res.writeHead(200, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ success: true, house: library[idx] }));
+      res.end(JSON.stringify({ success: true, house: { ...library[idx], components: undefined } }));
       return;
     }
 
     if (pathname.startsWith('/api/library/') && req.method === 'DELETE') {
       const libId = decodeURIComponent(pathname.replace('/api/library/', ''));
-      let library = [];
-      try {
-        if (fs.existsSync(LIBRARY_FILE)) {
-          library = JSON.parse(fs.readFileSync(LIBRARY_FILE, 'utf8'));
-        }
-      } catch (e) {}
+      const library = loadRawLibrary();
 
       const idx = library.findIndex(h => h.id === libId);
       if (idx === -1) {
@@ -1631,10 +2529,296 @@ const server = http.createServer(async (req, res) => {
       }
 
       const removed = library.splice(idx, 1)[0];
-      fs.writeFileSync(LIBRARY_FILE, JSON.stringify(library, null, 2), 'utf8');
+      saveRawLibrary(library);
 
       res.writeHead(200, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ success: true, removedHouse: removed }));
+      res.end(JSON.stringify({ success: true, removedHouse: { ...removed, components: undefined } }));
+      return;
+    }
+
+    // ----------------------------------------------------
+    // API: UO ARCHITECT & RAW TEXT IMPORT / EXPORT
+    // ----------------------------------------------------
+    if (pathname === '/api/import/parse' && req.method === 'POST') {
+      const data = await parseBody(req);
+      const rawDesigns = [];
+      const errors = [];
+
+      // 1. Check if uploaded files contain a Designs.idx + Designs.bin pair
+      const files = Array.isArray(data.files) ? data.files : [];
+      const idxFile = files.find(f => f.name && f.name.toLowerCase().endsWith('designs.idx'));
+      const binFile = files.find(f => f.name && f.name.toLowerCase().endsWith('designs.bin'));
+      if (idxFile && binFile && idxFile.contentBase64 && binFile.contentBase64) {
+        try {
+          const idxBuf = Buffer.from(idxFile.contentBase64, 'base64');
+          const binBuf = Buffer.from(binFile.contentBase64, 'base64');
+          rawDesigns.push(...parseUoaDesignsDatabase(idxBuf, binBuf, idxFile.name));
+        } catch (err) {
+          errors.push({ file: idxFile.name, error: err.message });
+        }
+      }
+
+      // 2. Parse individual uploaded files (.uoa, .txt, .wsc, .csv, .xml, .cs)
+      for (const f of files) {
+        if (!f || !f.name) continue;
+        const lower = f.name.toLowerCase();
+        if (lower.endsWith('designs.idx') || lower.endsWith('designs.bin')) continue;
+
+        try {
+          const buf = f.contentBase64 ? Buffer.from(f.contentBase64, 'base64') : Buffer.from(f.text || '', 'utf8');
+          const v = buf.length >= 2 ? buf.readInt16LE(0) : 0;
+          if (lower.endsWith('.uoa') && (v === 1 || v === 2)) {
+            rawDesigns.push(...parseUoaBinaryBuffer(buf, f.name, f.folderHint || ''));
+          } else {
+            const textContent = f.text !== undefined ? f.text : buf.toString('utf8');
+            rawDesigns.push(...parseTextDesign(textContent, f.name, f.folderHint || ''));
+          }
+        } catch (err) {
+          errors.push({ file: f.name, error: err.message });
+        }
+      }
+
+      // 3. Parse pasted raw text if provided
+      if (data.rawText && String(data.rawText).trim()) {
+        try {
+          const nameHint = (data.rawTextName || 'Raw Text Schematic').trim();
+          const parsed = parseTextDesign(String(data.rawText), nameHint);
+          if (data.defaultCategory) parsed.forEach(p => { p.rawCategory = data.defaultCategory; });
+          if (data.defaultAuthor) parsed.forEach(p => { p.rawAuthor = data.defaultAuthor; });
+          rawDesigns.push(...parsed);
+        } catch (err) {
+          errors.push({ file: data.rawTextName || 'Raw Text Input', error: err.message });
+        }
+      }
+
+      const existingLibrary = loadRawLibrary();
+      const designs = rawDesigns.map((raw, idx) => {
+        const norm = normalizeDesignToLibraryEntry(raw, Date.now() + idx);
+        if (data.defaultCategory && !raw.rawCategory) norm.category = data.defaultCategory;
+        if (data.defaultAuthor && !raw.rawAuthor) norm.author = data.defaultAuthor;
+        norm.alreadyInLibrary = existingLibrary.some(lh =>
+          lh.id === norm.id ||
+          (lh.name && lh.name.trim().toLowerCase() === norm.name.toLowerCase() && lh.tiles === norm.tiles)
+        );
+        pendingImportCache.set(norm.tempId, norm);
+        const { components, ...summary } = norm;
+        return summary;
+      });
+
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({
+        success: designs.length > 0,
+        count: designs.length,
+        designs,
+        errors
+      }));
+      return;
+    }
+
+    if (pathname === '/api/import/scan-dir' && req.method === 'POST') {
+      const data = await parseBody(req);
+      const defaultUoarDir = path.join(__dirname, 'uoar', 'Client', 'Save');
+      const targetDir = (data.dirPath && String(data.dirPath).trim()) ? String(data.dirPath).trim() : defaultUoarDir;
+
+      if (!fs.existsSync(targetDir)) {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: `Directory not found: ${targetDir}` }));
+        return;
+      }
+
+      const { designs, errors } = scanDirectoryForDesigns(targetDir, data.deduplicate !== false);
+      const summaries = designs.map(({ components, ...rest }) => rest);
+
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({
+        success: true,
+        dirPath: targetDir,
+        count: summaries.length,
+        designs: summaries,
+        errors
+      }));
+      return;
+    }
+
+    if (pathname.startsWith('/api/import/preview/') && req.method === 'GET') {
+      const tempId = decodeURIComponent(pathname.replace('/api/import/preview/', ''));
+      const maxZ = parsedUrl.query.maxZ !== undefined ? Number(parsedUrl.query.maxZ) : Infinity;
+      const item = pendingImportCache.get(tempId);
+
+      const png = (item && item.components && item.components.length > 0)
+        ? renderMultiComponents(item.components, maxZ)
+        : null;
+
+      res.writeHead(200, {
+        'Content-Type': 'image/png',
+        'Cache-Control': 'public, max-age=600'
+      });
+      res.end(png || TRANSPARENT_PNG);
+      return;
+    }
+
+    if (pathname === '/api/import/commit' && req.method === 'POST') {
+      const data = await parseBody(req);
+      const itemsToImport = Array.isArray(data.items) ? data.items : [];
+      const skipExisting = data.skipExisting !== false;
+      const addToServer = !!data.addToServer;
+
+      if (itemsToImport.length === 0) {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: 'No designs selected for import.' }));
+        return;
+      }
+
+      const library = loadRawLibrary();
+      let houses = [];
+      if (addToServer && fs.existsSync(HOUSES_FILE)) {
+        try { houses = JSON.parse(fs.readFileSync(HOUSES_FILE, 'utf8')); } catch (_) {}
+      }
+
+      let importedCount = 0;
+      let skippedCount = 0;
+      const importedIds = [];
+
+      for (const reqItem of itemsToImport) {
+        const cached = reqItem.tempId ? pendingImportCache.get(reqItem.tempId) : null;
+        const source = cached || reqItem;
+        if (!source || !Array.isArray(source.components) || source.components.length === 0) {
+          skippedCount++;
+          continue;
+        }
+
+        const name = String(reqItem.name || source.name || 'Imported House').trim();
+        const category = String(reqItem.category || source.category || 'Custom Housing').trim();
+        const author = String(reqItem.author || source.author || 'UO Architect Community').trim();
+        const description = String(reqItem.description || source.description || '').trim();
+        const cost = Number(reqItem.cost || source.cost || 50000);
+        const storage = Number(reqItem.storage || source.storage || 500);
+        const lockdowns = Number(reqItem.lockdowns || source.lockdowns || 230);
+        const vendors = Number(reqItem.vendors || source.vendors || 4);
+        const id = source.id || `uoa_${name.toLowerCase().replace(/[^a-z0-9]+/g, '_')}_${Date.now().toString(16)}`;
+
+        const existingIdx = library.findIndex(lh =>
+          lh.id === id ||
+          (lh.name && lh.name.trim().toLowerCase() === name.toLowerCase() && lh.tiles === source.components.length)
+        );
+
+        if (existingIdx !== -1 && skipExisting) {
+          skippedCount++;
+          continue;
+        }
+
+        const libEntry = {
+          id,
+          name,
+          category,
+          author,
+          description,
+          cost,
+          storage,
+          lockdowns,
+          vendors,
+          w: Number(reqItem.w || source.w || 12),
+          d: Number(reqItem.d || source.d || 12),
+          tiles: source.components.length,
+          file: source.file || `${id}.png`,
+          floors: source.floors || detectFloorsFromComponents(source.components, id),
+          sourceFormat: source.sourceFormat || 'UO Architect',
+          sourceFile: source.sourceFile || '',
+          components: source.components
+        };
+
+        if (existingIdx !== -1) {
+          library[existingIdx] = libEntry;
+        } else {
+          library.push(libEntry);
+        }
+
+        importedCount++;
+        importedIds.push(id);
+
+        if (addToServer) {
+          const nextMulti = Math.max(...houses.map(h => h.multi || 0), 0x9F) + 1;
+          houses.push({
+            name: libEntry.name,
+            multi: nextMulti,
+            cost: libEntry.cost,
+            storage: libEntry.storage,
+            lockdowns: libEntry.lockdowns,
+            vendors: libEntry.vendors,
+            file: libEntry.file,
+            w: libEntry.w,
+            d: libEntry.d,
+            floors: libEntry.floors,
+            tiles: libEntry.tiles,
+            libraryId: libEntry.id,
+            isCustom: true
+          });
+        }
+      }
+
+      saveRawLibrary(library);
+      if (addToServer && importedCount > 0) {
+        fs.writeFileSync(HOUSES_FILE, JSON.stringify(houses, null, 2), 'utf8');
+      }
+
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({
+        success: true,
+        importedCount,
+        skippedCount,
+        totalLibraryCount: library.length,
+        importedIds
+      }));
+      return;
+    }
+
+    if (pathname.startsWith('/api/export/uoa/') && req.method === 'GET') {
+      const idOrMulti = decodeURIComponent(pathname.replace('/api/export/uoa/', ''));
+      const library = loadRawLibrary();
+      let target = library.find(h => h.id === idOrMulti);
+      if (!target) {
+        const houses = getHousesList();
+        target = houses.find(h => String(h.multi) === idOrMulti || h.name.toLowerCase() === idOrMulti.toLowerCase());
+      }
+      const multiData = getHouseMultiData(target, library);
+      if (!target || !multiData || !multiData.components) {
+        res.writeHead(404, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: 'Design not found for .uoa export' }));
+        return;
+      }
+
+      const uoaBuf = serializeToUoaBuffer(target, multiData.components);
+      const safeFile = (target.name || 'house').replace(/[^a-zA-Z0-9_-]+/g, '_') + '.uoa';
+      res.writeHead(200, {
+        'Content-Type': 'application/octet-stream',
+        'Content-Disposition': `attachment; filename="${safeFile}"`
+      });
+      res.end(uoaBuf);
+      return;
+    }
+
+    if (pathname.startsWith('/api/export/txt/') && req.method === 'GET') {
+      const idOrMulti = decodeURIComponent(pathname.replace('/api/export/txt/', ''));
+      const library = loadRawLibrary();
+      let target = library.find(h => h.id === idOrMulti);
+      if (!target) {
+        const houses = getHousesList();
+        target = houses.find(h => String(h.multi) === idOrMulti || h.name.toLowerCase() === idOrMulti.toLowerCase());
+      }
+      const multiData = getHouseMultiData(target, library);
+      if (!target || !multiData || !multiData.components) {
+        res.writeHead(404, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: 'Design not found for Multi .txt export' }));
+        return;
+      }
+
+      const txtContent = serializeToMultiText(target, multiData.components);
+      const safeFile = (target.name || 'house').replace(/[^a-zA-Z0-9_-]+/g, '_') + '.txt';
+      res.writeHead(200, {
+        'Content-Type': 'text/plain; charset=utf-8',
+        'Content-Disposition': `attachment; filename="${safeFile}"`
+      });
+      res.end(txtContent);
       return;
     }
 
@@ -1646,7 +2830,12 @@ const server = http.createServer(async (req, res) => {
       const multiId = multiIdStr.startsWith('0x') ? parseInt(multiIdStr, 16) : parseInt(multiIdStr, 10);
       const maxZ = parsedUrl.query.maxZ !== undefined ? Number(parsedUrl.query.maxZ) : Infinity;
 
-      const multiData = activeMultiReader.getMulti(multiId);
+      let multiData = activeMultiReader.getMulti(multiId);
+      if (!multiData) {
+        const houses = getHousesList();
+        const matchingHouse = houses.find(h => h.multi === multiId);
+        if (matchingHouse) multiData = getHouseMultiData(matchingHouse);
+      }
       const png = multiData ? renderMultiComponents(multiData.components, maxZ) : null;
 
       res.writeHead(200, {
@@ -1660,11 +2849,11 @@ const server = http.createServer(async (req, res) => {
     if (pathname.startsWith('/api/render/library/') && req.method === 'GET') {
       const libId = decodeURIComponent(pathname.replace('/api/render/library/', ''));
       const maxZ = parsedUrl.query.maxZ !== undefined ? Number(parsedUrl.query.maxZ) : Infinity;
-      const library = getLibraryList();
+      const library = loadRawLibrary();
       const libHouse = library.find(h => h.id === libId);
 
       let components = libHouse?.components || [];
-      if (libHouse?.multi !== undefined && activeMultiReader.isAvailable()) {
+      if (libHouse?.multi !== undefined && libHouse?.multi !== null && activeMultiReader.isAvailable()) {
         const md = activeMultiReader.getMulti(libHouse.multi);
         if (md && md.components && md.components.length > components.length) {
           components = md.components;
@@ -1841,7 +3030,7 @@ const server = http.createServer(async (req, res) => {
     }
 
     // ----------------------------------------------------
-    // STATIC FILE SERVING
+    // STATIC FILE SERVING & ON-DEMAND HOUSE IMAGE CACHE
     // ----------------------------------------------------
     let filePath = path.join(PUBLIC_DIR, pathname === '/' ? 'index.html' : pathname);
 
@@ -1860,6 +3049,55 @@ const server = http.createServer(async (req, res) => {
       return;
     }
 
+    // On-demand rendering and disk caching for library / imported house images
+    if (pathname.startsWith('/images/') || pathname.startsWith('/images_floors/')) {
+      const reqFile = decodeURIComponent(path.basename(pathname));
+      const isFloor = pathname.startsWith('/images_floors/');
+      const library = loadRawLibrary();
+      let targetComps = null;
+      let maxZ = Infinity;
+
+      if (!isFloor) {
+        const libMatch = library.find(h => h.file === reqFile || `${h.id}.png` === reqFile);
+        if (libMatch) {
+          const md = getHouseMultiData(libMatch, library);
+          targetComps = md ? md.components : libMatch.components;
+        }
+      } else {
+        for (const h of library) {
+          if (!Array.isArray(h.floors)) continue;
+          const fl = h.floors.find((f, idx) => f.file === reqFile || `${h.id}_f${idx + 1}.png` === reqFile);
+          if (fl) {
+            const md = getHouseMultiData(h, library);
+            targetComps = md ? md.components : h.components;
+            maxZ = (fl.z ?? 0) + 15;
+            break;
+          }
+        }
+      }
+
+      if (targetComps && targetComps.length > 0) {
+        const png = renderMultiComponents(targetComps, maxZ);
+        if (png) {
+          try {
+            const targetDir = path.dirname(filePath);
+            if (!fs.existsSync(targetDir)) fs.mkdirSync(targetDir, { recursive: true });
+            fs.writeFileSync(filePath, png);
+          } catch (_) {}
+          res.writeHead(200, {
+            'Content-Type': 'image/png',
+            'Cache-Control': 'public, max-age=86400'
+          });
+          res.end(png);
+          return;
+        }
+      }
+
+      res.writeHead(200, { 'Content-Type': 'image/png' });
+      res.end(TRANSPARENT_PNG);
+      return;
+    }
+
     // If not found
     res.writeHead(404, { 'Content-Type': 'text/plain' });
     res.end('404 Not Found');
@@ -1871,7 +3109,7 @@ const server = http.createServer(async (req, res) => {
   }
 });
 
-const PORT = config.port || 3000;
+const PORT = Number(process.env.PORT) || config.port || 3000;
 server.listen(PORT, () => {
   console.log(`=======================================================`);
   console.log(`🏰 Ultima Online Housing & Art Studio`);
