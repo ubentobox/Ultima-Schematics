@@ -6,6 +6,9 @@
   "scripts": {
     "start": "node server.js"
   },
+  "engines": {
+    "node": ">=24.22.1"
+  },
   "keywords": [
     "ultima-online",
     "uo",
